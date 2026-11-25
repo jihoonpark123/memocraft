@@ -6,7 +6,6 @@
   <title>MemoCraft — 과목·교수·단원별 스마트 플래시카드 & 스터디 공유</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
@@ -16,7 +15,7 @@
     // 모든 스터디원이 서버 설정 없이 이메일·비밀번호·이름·학번만으로 바로 로그인할 수 있습니다.
     window.MEMOCRAFT_CONFIG = {
       url: 'https://xxsfsopzmomhxdrmvtps.supabase.co',
-      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Zzb3B6bW9taHhkcm12dHBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1NzI2OTcsImV4cCI6MjExMTE0ODY5N30.8PEcPRvCh12bK89mwA4JyM527WdgIr2Qig108i17ZjE',
+      key: '',
       adminPin: '2026' // 관리자 페이지 PIN 번호 (원하는 숫자로 변경 가능)
     };
   </script>
@@ -177,18 +176,15 @@
             <i data-lucide="menu" class="w-5 h-5"></i>
           </button>
           <div class="flex items-center gap-2 shrink-0">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-sm shrink-0">
               <i data-lucide="layers" class="w-4 h-4"></i>
             </div>
-            <div class="leading-tight">
-              <span class="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">MemoCraft</span>
-              <span class="hidden sm:inline-block ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">Study SRS</span>
-            </div>
+            <span class="hidden xl:inline font-extrabold text-base tracking-tight text-slate-900 dark:text-white whitespace-nowrap">MemoCraft</span>
           </div>
         </div>
 
         <!-- Center Nav Tabs -->
-        <nav class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full" aria-label="주요 메뉴">
+        <nav class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto min-w-0 shrink" aria-label="주요 메뉴">
           <button type="button" data-tab="library" class="nav-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition">
             <i data-lucide="library" class="w-4 h-4"></i>
             <span>내 카드</span>
@@ -201,10 +197,6 @@
           <button type="button" data-tab="studygroup" class="nav-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition">
             <i data-lucide="users" class="w-4 h-4"></i>
             <span>스터디 공유</span>
-          </button>
-          <button type="button" data-tab="analytics" class="nav-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition">
-            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">통계</span>
           </button>
         </nav>
 
@@ -542,7 +534,7 @@
                 <h2 id="group-title" class="text-xl sm:text-2xl font-extrabold"></h2>
                 <p id="group-desc" class="text-xs sm:text-sm text-indigo-100 max-w-2xl"></p>
               </div>
-              <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <div class="flex flex-wrap items-center gap-2">
                 <button id="btn-copy-invite" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-bold shadow-sm transition">
                   <i data-lucide="link" class="w-4 h-4"></i>
                   <span>초대 링크·코드 복사</span>
@@ -558,6 +550,10 @@
                 <button id="btn-open-share-io-2" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs sm:text-sm font-bold transition">
                   <i data-lucide="upload-cloud" class="w-4 h-4"></i>
                   <span>덱 공유/가져오기</span>
+                </button>
+                <button id="btn-delete-group" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/80 hover:bg-rose-600 border border-rose-300/30 text-white text-xs sm:text-sm font-bold transition" title="현재 스터디 제거">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  <span>스터디 제거</span>
                 </button>
               </div>
             </div>
@@ -605,57 +601,6 @@
               </div>
               <div id="shared-cards-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
-          </div>
-        </section>
-
-        <!-- VIEW 4: ANALYTICS -->
-        <section id="view-analytics" class="hidden space-y-5">
-          <div>
-            <h1 class="text-xl sm:text-2xl font-extrabold">학습 통계 및 단원별 약점 분석</h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">과목·교수·단원별 숙달 현황과 최근 복습 추이를 한눈에 확인하세요.</p>
-          </div>
-
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">오늘 복습 완료</span>
-              <div id="stat-today-reviewed" class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">0</div>
-              <span class="text-[11px] text-slate-400">목표 20장 기준</span>
-            </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">전체 보유 카드</span>
-              <div id="stat-total-cards" class="text-2xl font-extrabold mt-1">0</div>
-              <span id="stat-due-sub" class="text-[11px] text-rose-500 font-semibold">복습 대기 0장</span>
-            </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">평균 기억 유지율</span>
-              <div id="stat-retention" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0%</div>
-              <span class="text-[11px] text-slate-400">보통/쉬움 응답 비율</span>
-            </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">연속 학습일</span>
-              <div id="stat-streak" class="text-2xl font-extrabold text-amber-500 mt-1">7일</div>
-              <span class="text-[11px] text-slate-400">스터디 그룹 평균 5.5일</span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <h3 class="text-sm font-extrabold mb-3">최근 7일 복습량 추이</h3>
-              <div class="relative h-64">
-                <canvas id="chart-weekly"></canvas>
-              </div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-              <h3 class="text-sm font-extrabold mb-3">과목별 숙달 현황</h3>
-              <div class="relative h-64">
-                <canvas id="chart-subjects"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
-            <h3 class="text-sm font-extrabold mb-3">단원별 집중 복습 추천</h3>
-            <div id="analytics-chapter-table" class="divide-y divide-slate-100 dark:divide-slate-800"></div>
           </div>
         </section>
 
@@ -1143,6 +1088,24 @@
     </div>
   </div>
 
+  <!-- MODAL 6C: DELETE / LEAVE STUDY GROUP CONFIRMATION -->
+  <div id="modal-del-group" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
+      <h3 class="text-base font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+        <i data-lucide="trash-2" class="w-4 h-4"></i> 스터디 그룹 제거
+      </h3>
+      <p id="dg-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <label class="flex items-center gap-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 cursor-pointer">
+        <input id="dg-also-delete-cards" type="checkbox" class="rounded border-rose-300 text-rose-600 focus:ring-rose-500" />
+        <span>이 스터디에 공유된 카드도 서버와 내 목록에서 함께 삭제</span>
+      </label>
+      <div class="flex justify-end gap-2">
+        <button id="btn-dg-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
+        <button id="btn-dg-confirm" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">스터디 제거</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 7: RENAME / MOVE / ADD TAXONOMY ITEM -->
   <div id="modal-tax-action" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
@@ -1174,13 +1137,13 @@
     </div>
   </div>
 
-  <!-- MODAL 8: SUPABASE ACCOUNT LOGIN & REAL-TIME STUDY SYNC -->
+  <!-- MODAL 8: CLEAN STUDENT ACCOUNT & SYNC STATUS MODAL -->
   <div id="modal-sync" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll p-5 space-y-4 shadow-2xl animate-fade-up">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span id="sync-modal-dot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-          <h3 class="text-base font-extrabold">계정 로그인 & 실시간 스터디 동기화</h3>
+          <h3 class="text-base font-extrabold">내 계정 & 실시간 동기화</h3>
         </div>
         <button id="btn-close-sync" type="button" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -1188,82 +1151,38 @@
       </div>
 
       <!-- Logged-in Account Banner -->
-      <div id="auth-user-banner" class="hidden p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2">
-        <div class="text-xs">
+      <div id="auth-user-banner" class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2">
+        <div class="text-xs min-w-0">
           <div class="font-extrabold text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
-            <i data-lucide="user-check" class="w-4 h-4"></i>
-            <span id="auth-user-label">로그인됨</span>
+            <i data-lucide="user-check" class="w-4 h-4 shrink-0"></i>
+            <span id="auth-user-label" class="truncate">로그인됨</span>
           </div>
-          <p class="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-0.5">자동 로그인이 활성화되어 있어 다음 방문 시 바로 입장됩니다.</p>
+          <p class="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-0.5">자동 로그인이 활성화되어 있습니다.</p>
         </div>
-        <button id="btn-auth-logout" type="button" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600 transition">로그아웃</button>
+        <button id="btn-auth-logout" type="button" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600 transition shrink-0">로그아웃</button>
       </div>
 
-      <!-- Step 1: Server & Room Connection -->
-      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">1. 스터디 서버 & 방 연결</span>
-          <button id="btn-copy-sync-invite" type="button" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hover:bg-indigo-100 transition">
-            <i data-lucide="link" class="w-3 h-3"></i> 팀원 초대 링크 복사
-          </button>
+      <!-- Current Study Room Status -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-slate-500">현재 연결된 스터디 방</span>
+          <span id="sync-room-badge" class="font-mono font-extrabold text-indigo-600 dark:text-indigo-400">-</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">스터디 방 코드</label>
-            <input id="sync-room" type="text" placeholder="예: PHYSIO-2026" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold" />
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">내 닉네임</label>
-            <input id="sync-nickname" type="text" placeholder="예: 알바트로스" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Project URL</label>
-            <input id="sync-url" type="url" placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Publishable / Anon Key</label>
-            <input id="sync-key" type="password" placeholder="sb_publishable_... 또는 eyJhbGci..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono" />
-          </div>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <button id="btn-sync-connect-now" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">실시간 스터디 서버 연결</button>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          다른 스터디 방으로 옮기거나 새 스터디를 만들려면 상단 <strong>스터디 공유</strong> 탭을 이용해 주세요.
+        </p>
       </div>
 
       <div id="sync-feedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <button id="btn-sync-push-all" type="button" class="hidden px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">내 카드 전체 방에 올리기</button>
-        <button id="btn-sync-disconnect" type="button" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/50 ml-auto">연결 해제</button>
-      </div>
-
-      <!-- Progress Table SQL Setup Box -->
-      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">개인 복습 진도 동기화 테이블 SQL (최초 1회 실행)</span>
-          <button id="btn-copy-sql" type="button" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 transition">SQL 복사</button>
+      <!-- Clean Action Buttons -->
+      <div class="flex flex-col gap-2">
+        <button id="btn-sync-push-all" type="button" class="hidden w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">내 카드 전체 현재 방에 올리기</button>
+        <button id="btn-copy-sync-invite" type="button" class="hidden w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-slate-700 dark:text-slate-200 text-xs font-bold transition">현재 스터디 초대 링크 복사</button>
+        <div class="flex items-center gap-2 pt-1">
+          <button id="btn-sync-connect-now" type="button" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition">실시간 다시 연결</button>
+          <button id="btn-sync-disconnect" type="button" class="hidden py-2 px-3 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/50 transition">동기화 끄기</button>
         </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400">
-          Supabase <strong>SQL Editor</strong> 새 탭에서 아래 코드를 1회 실행하고, <strong>Authentication → Providers → Email</strong>에서 <em>Confirm email</em>을 끄면 이메일 인증 없이 바로 가입·로그인됩니다.
-        </p>
-        <pre id="sync-sql-code" class="p-3 rounded-xl bg-slate-900 text-emerald-300 text-[11px] font-mono overflow-x-auto leading-relaxed">create table if not exists public.mc_user_progress (
-  user_id uuid not null references auth.users(id) on delete cascade,
-  card_id text not null,
-  reps int not null default 0,
-  interval_days double precision not null default 0,
-  ease double precision not null default 2.5,
-  due_at bigint not null default 0,
-  last_result int,
-  updated_at timestamptz not null default now(),
-  primary key (user_id, card_id)
-);
-
-alter table public.mc_user_progress enable row level security;
-drop policy if exists "mc_own_progress" on public.mc_user_progress;
-create policy "mc_own_progress" on public.mc_user_progress
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-grant all on table public.mc_user_progress to authenticated;</pre>
       </div>
     </div>
   </div>
@@ -1300,7 +1219,7 @@ grant all on table public.mc_user_progress to authenticated;</pre>
       </div>
       <div class="space-y-2">
         <label class="block text-xs font-bold text-slate-500">관리자 PIN 번호</label>
-        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="PIN 입력 (기본: 2026)" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="관리자 PIN 입력" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         <p id="admin-pin-err" class="hidden text-[11px] font-bold text-rose-500 text-center">PIN 번호가 일치하지 않습니다.</p>
       </div>
       <button id="btn-admin-pin-submit" type="button" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">관리자 페이지 열기</button>
@@ -1413,8 +1332,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
         sessionWaitingMap: new Map() // cardId -> dueAt (for active deck's 1분/5분/10분 cards)
       };
 
-      let weeklyChart = null;
-      let subjectChart = null;
 
       function loadState() {
         try {
@@ -1678,7 +1595,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
         if (ui.activeTab === 'library') renderLibrary();
         if (ui.activeTab === 'study') renderStudyView();
         if (ui.activeTab === 'studygroup') renderStudyGroupView();
-        if (ui.activeTab === 'analytics') renderAnalyticsView();
         if (ui.activeTab === 'admin') renderAdminView();
         if (window.lucide) lucide.createIcons();
       }
@@ -1696,7 +1612,7 @@ grant all on table public.mc_user_progress to authenticated;</pre>
           }`;
         });
 
-        ['library', 'study', 'studygroup', 'analytics', 'admin'].forEach(t => {
+        ['library', 'study', 'studygroup', 'admin'].forEach(t => {
           const sec = document.getElementById('view-' + t);
           if (sec) sec.classList.toggle('hidden', t !== ui.activeTab);
         });
@@ -2302,7 +2218,18 @@ grant all on table public.mc_user_progress to authenticated;</pre>
       // ================= STUDY GROUP VIEW =================
       function renderStudyGroupView() {
         const group = state.groups.find(g => g.id === ui.activeGroupId) || state.groups[0];
-        if (!group) return;
+        const delBtn = document.getElementById('btn-delete-group');
+        if (!group) {
+          document.getElementById('group-switcher').innerHTML = '<option value="">참여 중인 스터디 없음</option>';
+          document.getElementById('group-title').textContent = '참여 중인 스터디가 없습니다';
+          document.getElementById('group-desc').textContent = '우측의 [새 스터디] 또는 [코드로 참여] 버튼으로 스터디를 시작해 보세요.';
+          document.getElementById('group-member-count').textContent = '0명';
+          document.getElementById('group-members-list').innerHTML = '<p class="text-xs text-slate-400">스터디에 참여하면 멤버 현황이 표시됩니다.</p>';
+          document.getElementById('shared-cards-list').innerHTML = '<div class="col-span-full bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 text-center text-sm text-slate-500">참여 중인 스터디가 없습니다.</div>';
+          if (delBtn) delBtn.classList.add('hidden');
+          return;
+        }
+        if (delBtn) delBtn.classList.remove('hidden');
         ui.activeGroupId = group.id;
 
         const switcher = document.getElementById('group-switcher');
@@ -2392,101 +2319,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
             </div>
           `;
         }).join('');
-      }
-
-      // ================= ANALYTICS VIEW =================
-      function renderAnalyticsView() {
-        const total = state.cards.length;
-        const due = state.cards.filter(isDue).length;
-        const rated = state.cards.filter(c => c.srs && c.srs.lastResult);
-        const goodCount = rated.filter(c => c.srs.lastResult >= 3).length;
-        const retention = rated.length ? Math.round((goodCount / rated.length) * 100) : 100;
-
-        document.getElementById('stat-today-reviewed').textContent = `${state.todayReviewed}장`;
-        document.getElementById('stat-total-cards').textContent = `${total}장`;
-        document.getElementById('stat-due-sub').textContent = `복습 대기 ${due}장`;
-        document.getElementById('stat-retention').textContent = `${retention}%`;
-
-        const isDark = state.theme === 'dark';
-        const textColor = isDark ? '#cbd5e1' : '#475569';
-        const gridColor = isDark ? 'rgba(148,163,184,0.12)' : 'rgba(148,163,184,0.2)';
-
-        if (window.Chart) {
-          if (weeklyChart) weeklyChart.destroy();
-          weeklyChart = new Chart(document.getElementById('chart-weekly'), {
-            type: 'bar',
-            data: {
-              labels: ['6일 전', '5일 전', '4일 전', '3일 전', '2일 전', '어제', '오늘'],
-              datasets: [{
-                label: '복습 카드 수',
-                data: state.weeklyReviews,
-                backgroundColor: '#6366f1',
-                borderRadius: 8
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { ticks: { color: textColor }, grid: { display: false } },
-                y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
-              }
-            }
-          });
-
-          if (subjectChart) subjectChart.destroy();
-          const subLabels = state.taxonomy.map(s => s.name);
-          const newData = state.taxonomy.map(s => state.cards.filter(c => c.subjectId === s.id && getCardStatus(c) === 'new').length);
-          const dueData = state.taxonomy.map(s => state.cards.filter(c => c.subjectId === s.id && getCardStatus(c) === 'due').length);
-          const mastData = state.taxonomy.map(s => state.cards.filter(c => c.subjectId === s.id && (getCardStatus(c) === 'mastered' || getCardStatus(c) === 'learning')).length);
-
-          subjectChart = new Chart(document.getElementById('chart-subjects'), {
-            type: 'bar',
-            data: {
-              labels: subLabels,
-              datasets: [
-                { label: '숙달/학습중', data: mastData, backgroundColor: '#10b981', borderRadius: 6 },
-                { label: '복습 필요', data: dueData, backgroundColor: '#f43f5e', borderRadius: 6 },
-                { label: '새 카드', data: newData, backgroundColor: '#38bdf8', borderRadius: 6 }
-              ]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: { legend: { labels: { color: textColor, boxWidth: 12 } } },
-              scales: {
-                x: { stacked: true, ticks: { color: textColor }, grid: { display: false } },
-                y: { stacked: true, beginAtZero: true, ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } }
-              }
-            }
-          });
-        }
-
-        // Chapter weakness list
-        const rows = [];
-        state.taxonomy.forEach(s => {
-          s.professors.forEach(p => {
-            p.chapters.forEach(ch => {
-              const chCards = state.cards.filter(c => c.chapterId === ch.id);
-              const chDue = chCards.filter(isDue).length;
-              if (chCards.length > 0) {
-                rows.push({ s, p, ch, total: chCards.length, due: chDue });
-              }
-            });
-          });
-        });
-        rows.sort((a, b) => b.due - a.due);
-
-        document.getElementById('analytics-chapter-table').innerHTML = rows.map(r => `
-          <div class="py-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div class="text-sm font-bold">${escapeHtml(r.ch.name)}</div>
-              <div class="text-xs text-slate-500">${escapeHtml(r.s.name)} · ${escapeHtml(r.p.name)} · 총 ${r.total}장 중 <span class="text-rose-500 font-bold">${r.due}장 복습 필요</span></div>
-            </div>
-            <button type="button" data-study-chapter="${r.s.id}|${r.p.id}|${r.ch.id}" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">이 단원 바로 복습</button>
-          </div>
-        `).join('');
       }
 
       // ================= MODALS =================
@@ -3803,7 +3635,7 @@ grant all on table public.mc_user_progress to authenticated;</pre>
         document.getElementById('gate-student-id').value = sbConfig.studentId || '';
         document.getElementById('gate-server-fields').classList.add('hidden');
         const toggleBtn = document.getElementById('btn-gate-toggle-server');
-        if (toggleBtn) toggleBtn.classList.toggle('hidden', !!(window.MEMOCRAFT_CONFIG && window.MEMOCRAFT_CONFIG.key));
+        if (toggleBtn) toggleBtn.classList.toggle('hidden', !!((window.MEMOCRAFT_CONFIG && window.MEMOCRAFT_CONFIG.key) || sbConfig.key));
         gate.classList.remove('hidden');
         app.classList.add('hidden');
         app.classList.remove('flex');
@@ -3973,10 +3805,8 @@ grant all on table public.mc_user_progress to authenticated;</pre>
       }
 
       function openSyncModal() {
-        document.getElementById('sync-nickname').value = sbConfig.nickname || CURRENT_USER;
-        document.getElementById('sync-room').value = sbConfig.room || 'PHYSIO-2026';
-        document.getElementById('sync-url').value = sbConfig.url || '';
-        document.getElementById('sync-key').value = sbConfig.key || '';
+        const roomBadge = document.getElementById('sync-room-badge');
+        if (roomBadge) roomBadge.textContent = sbConfig.room || 'MC-STUDY-2026';
         updateSyncIndicator(sbConnected);
         const modal = document.getElementById('modal-sync');
         modal.classList.remove('hidden');
@@ -4450,12 +4280,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
         });
         document.getElementById('btn-sync-disconnect').addEventListener('click', disconnectSupabase);
         document.getElementById('btn-sync-connect-now').addEventListener('click', () => {
-          sbConfig.nickname = document.getElementById('sync-nickname').value.trim() || sbConfig.nickname || '스터디원';
-          sbConfig.room = document.getElementById('sync-room').value.trim() || 'MC-STUDY-2026';
-          sbConfig.url = document.getElementById('sync-url').value.trim().replace(/\/rest\/v1\/?$/i, '');
-          sbConfig.key = document.getElementById('sync-key').value.trim();
-          CURRENT_USER = sbConfig.nickname;
-          saveSyncConfig();
           connectSupabase(false);
         });
         document.getElementById('btn-auth-logout').addEventListener('click', handleAuthLogout);
@@ -4466,9 +4290,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
           const r = encodeURIComponent(sbConfig.room.trim());
           const link = `${base}?url=${u}&key=${k}&room=${r}`;
           copyToClipboard(link, '팀원 원클릭 초대 링크가 복사되었습니다! 카톡방에 공유하세요.');
-        });
-        document.getElementById('btn-copy-sql').addEventListener('click', () => {
-          copyToClipboard(document.getElementById('sync-sql-code').textContent, '개인 진도 동기화 SQL이 복사되었습니다!');
         });
         document.getElementById('btn-open-apkg-top').addEventListener('click', openShareIoModal);
         document.getElementById('btn-open-share-io').addEventListener('click', openShareIoModal);
@@ -5021,6 +4842,45 @@ grant all on table public.mc_user_progress to authenticated;</pre>
           const m = document.getElementById('modal-join-group');
           m.classList.add('hidden'); m.classList.remove('flex');
         });
+        document.getElementById('btn-delete-group').addEventListener('click', () => {
+          const g = state.groups.find(x => x.id === ui.activeGroupId);
+          if (!g) return;
+          const cnt = state.cards.filter(c => c.sharedGroupId === g.id).length;
+          document.getElementById('dg-desc').textContent = `"${g.name}" (${g.inviteCode}) 스터디를 내 목록에서 제거할까요? 현재 이 스터디에 연결된 카드는 ${cnt}장입니다.`;
+          document.getElementById('dg-also-delete-cards').checked = false;
+          const m = document.getElementById('modal-del-group');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          if (window.lucide) lucide.createIcons();
+        });
+        document.getElementById('btn-dg-cancel').addEventListener('click', () => {
+          const m = document.getElementById('modal-del-group');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-dg-confirm').addEventListener('click', async () => {
+          const g = state.groups.find(x => x.id === ui.activeGroupId);
+          if (!g) return;
+          const delCards = document.getElementById('dg-also-delete-cards').checked;
+          if (delCards) {
+            const delIds = state.cards.filter(c => c.sharedGroupId === g.id).map(c => c.id);
+            state.cards = state.cards.filter(c => c.sharedGroupId !== g.id);
+            if (delIds.length) await syncDeleteCards(delIds);
+          } else {
+            state.cards.forEach(c => { if (c.sharedGroupId === g.id) c.sharedGroupId = ''; });
+          }
+          state.groups = state.groups.filter(x => x.id !== g.id);
+          ui.activeGroupId = state.groups[0]?.id || '';
+          const nextGrp = state.groups[0];
+          if (nextGrp) {
+            sbConfig.room = nextGrp.inviteCode;
+            saveSyncConfig();
+            if (sbConfig.url && sbConfig.key) await connectSupabase(true);
+          }
+          saveState();
+          const m = document.getElementById('modal-del-group');
+          m.classList.add('hidden'); m.classList.remove('flex');
+          renderAll();
+          showToast(`"${g.name}" 스터디를 제거했습니다.`);
+        });
         document.getElementById('btn-jg-join').addEventListener('click', async () => {
           const code = document.getElementById('jg-code').value.trim().toUpperCase();
           const name = document.getElementById('jg-name').value.trim();
@@ -5240,18 +5100,6 @@ grant all on table public.mc_user_progress to authenticated;</pre>
           e.target.value = '';
         });
 
-        // Analytics chapter direct study
-        document.getElementById('analytics-chapter-table').addEventListener('click', e => {
-          const btn = e.target.closest('[data-study-chapter]');
-          if (!btn) return;
-          const [sId, pId, cId] = btn.dataset.studyChapter.split('|');
-          ui.filterSubject = sId;
-          ui.filterProf = pId;
-          ui.filterChapter = cId;
-          ui.activeTab = 'study';
-          buildStudyQueue('filtered');
-          renderAll();
-        });
       }
 
       // Boot with Name + Student ID Auto-Login
