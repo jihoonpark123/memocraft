@@ -12,6 +12,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
   <script>
+    // [배포 설정] 아래 key에 Supabase Publishable/Anon Key를 한 번만 붙여넣고 GitHub에 올리면
+    // 모든 스터디원이 서버 설정 없이 이메일·비밀번호·이름·학번만으로 바로 로그인할 수 있습니다.
+    window.MEMOCRAFT_CONFIG = {
+      url: 'https://xxsfsopzmomhxdrmvtps.supabase.co',
+      key: '',
+      adminPin: '2026' // 관리자 페이지 PIN 번호 (원하는 숫자로 변경 가능)
+    };
+  </script>
+  <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -96,13 +105,70 @@
     .rich-content ul { list-style: disc; padding-left: 1.25rem; margin: 0.35rem 0; text-align: left; }
     .rich-content ol { list-style: decimal; padding-left: 1.25rem; margin: 0.35rem 0; text-align: left; }
     .rich-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 0.4rem auto; display: block; }
-    .tree-row .tree-actions { opacity: 0; transition: opacity 0.15s ease; }
-    .tree-row:hover .tree-actions, .tree-row:focus-within .tree-actions { opacity: 1; }
-    @media (max-width: 1024px) { .tree-row .tree-actions { opacity: 1; } }
+    .tree-row { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    .tree-row:active { transform: scale(0.985); transition: transform 0.12s ease; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen antialiased selection:bg-indigo-200 dark:selection:bg-indigo-800">
-  <div id="app" class="flex flex-col min-h-screen">
+  <!-- SIMPLE NAME + STUDENT ID GATE (Auto-Login After First Entry) -->
+  <div id="auth-gate" class="fixed inset-0 z-[55] bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5 my-auto animate-fade-up">
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="layers" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">MemoCraft 시작하기</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">이름과 학번만 입력하면 바로 입장하며, 다음부터는 자동 로그인됩니다.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">이름 <span class="text-rose-500">*</span></label>
+          <input id="gate-name" type="text" placeholder="예: 박지훈" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">학번 <span class="text-rose-500">*</span></label>
+          <input id="gate-student-id" type="text" placeholder="예: 20231234" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <!-- Hidden Admin Server Config -->
+        <div id="gate-server-fields" class="hidden p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Supabase Project URL</label>
+            <input id="gate-url" type="url" placeholder="https://xxsfsopzmomhxdrmvtps.supabase.co" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Supabase Publishable / Anon Key</label>
+            <input id="gate-key" type="password" placeholder="sb_publishable_... 또는 anon key" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-mono" />
+          </div>
+        </div>
+      </div>
+
+      <label class="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer select-none">
+        <input id="gate-consent" type="checkbox" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0" />
+        <span class="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <strong class="text-indigo-600 dark:text-indigo-400">[필수]</strong> <strong>이름·학번 개인정보 제공 및 이용</strong>에 동의합니다.
+        </span>
+      </label>
+
+      <div id="gate-feedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+      <button id="btn-gate-submit" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition">
+        입장하기 (자동 로그인)
+      </button>
+
+      <div class="text-center space-y-2">
+        <button id="btn-gate-toggle-server" type="button" class="text-[10px] text-slate-400 hover:text-indigo-500 underline">관리자 서버 키 설정</button>
+        <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">
+          모든 문제·텍스트·사진 등 학습 자료의 저작권은 원 제작자에게 있으며, 학습 외 무단 배포를 금합니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden flex-col min-h-screen">
     <!-- Top Header -->
     <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
       <div class="max-w-[1600px] mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-2">
@@ -160,6 +226,9 @@
             <i data-lucide="plus" class="w-4 h-4"></i>
             <span class="hidden sm:inline">새 카드</span>
           </button>
+          <button id="btn-open-admin" type="button" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 transition" title="관리자 페이지" aria-label="관리자 페이지">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+          </button>
           <button id="btn-toggle-theme" type="button" class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" aria-label="테마 전환">
             <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
             <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
@@ -175,12 +244,15 @@
 
       <!-- Left Hierarchy Sidebar (Subject -> Professor -> Chapter) -->
       <aside id="hierarchy-sidebar" class="fixed lg:sticky top-14 left-0 z-40 lg:z-10 w-72 shrink-0 h-[calc(100vh-3.5rem)] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
-        <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">과목 · 교수 · 단원 분류</span>
-          <button id="btn-manage-taxonomy" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-            <span>분류 설정</span>
-          </button>
+        <div class="px-3.5 pt-3 pb-2.5 border-b border-slate-200 dark:border-slate-800 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">과목 · 교수 · 단원 분류</span>
+            <button id="btn-manage-taxonomy" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+              <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+              <span>분류 설정</span>
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400">항목을 꾹 누르면(PC 우클릭) 추가·이름변경·이동·삭제</p>
         </div>
 
         <!-- Quick Smart Filters -->
@@ -473,7 +545,11 @@
               <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <button id="btn-copy-invite" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-bold shadow-sm transition">
                   <i data-lucide="link" class="w-4 h-4"></i>
-                  <span>초대 코드 복사</span>
+                  <span>초대 링크·코드 복사</span>
+                </button>
+                <button id="btn-join-group" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs sm:text-sm font-bold transition">
+                  <i data-lucide="log-in" class="w-4 h-4"></i>
+                  <span>코드로 참여</span>
                 </button>
                 <button id="btn-create-group" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs sm:text-sm font-bold transition">
                   <i data-lucide="folder-plus" class="w-4 h-4"></i>
@@ -481,7 +557,7 @@
                 </button>
                 <button id="btn-open-share-io-2" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs sm:text-sm font-bold transition">
                   <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                  <span>덱 코드 공유/가져오기</span>
+                  <span>덱 공유/가져오기</span>
                 </button>
               </div>
             </div>
@@ -582,8 +658,108 @@
             <div id="analytics-chapter-table" class="divide-y divide-slate-100 dark:divide-slate-800"></div>
           </div>
         </section>
+
+        <!-- VIEW 5: ADMIN DASHBOARD (Members Management & All Decks Monitor) -->
+        <section id="view-admin" class="hidden space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-1">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> 관리자 전용 대시보드
+              </div>
+              <h1 class="text-xl sm:text-2xl font-extrabold">접속 인원 관리 & 전체 덱 모니터링</h1>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-admin-refresh" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 실시간 새로고침
+              </button>
+              <button id="btn-admin-lock" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i> 관리자 잠금
+              </button>
+            </div>
+          </div>
+
+          <!-- Admin KPI Summary -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
+              <span class="text-xs font-semibold text-slate-500">전체 접속 인원</span>
+              <div id="admin-stat-users" class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">0명</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
+              <span class="text-xs font-semibold text-slate-500">차단된 인원</span>
+              <div id="admin-stat-blocked" class="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">0명</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
+              <span class="text-xs font-semibold text-slate-500">생성된 스터디 방</span>
+              <div id="admin-stat-rooms" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0개</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4">
+              <span class="text-xs font-semibold text-slate-500">서버 공유 카드 총합</span>
+              <div id="admin-stat-cards" class="text-2xl font-extrabold mt-1">0장</div>
+            </div>
+          </div>
+
+          <div id="admin-status-banner" class="hidden p-3.5 rounded-2xl text-xs font-semibold"></div>
+
+          <!-- Section 1: Connected Members Table -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 class="text-sm font-extrabold flex items-center gap-1.5">
+                <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i> 접속 인원 목록 (실시간 차단 가능)
+              </h2>
+              <input id="admin-user-search" type="text" placeholder="이름 또는 학번 검색..." class="w-full sm:w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs" />
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="border-b border-slate-200 dark:border-slate-800 text-slate-500">
+                  <tr>
+                    <th class="py-2 pr-3 font-bold">이름</th>
+                    <th class="py-2 pr-3 font-bold">학번</th>
+                    <th class="py-2 pr-3 font-bold">최근 방 코드</th>
+                    <th class="py-2 pr-3 font-bold">최근 접속</th>
+                    <th class="py-2 pr-3 font-bold">상태</th>
+                    <th class="py-2 text-right font-bold">관리</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-tbody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Section 2: All Created Decks & Cards Monitor -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 class="text-sm font-extrabold flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-4 h-4 text-emerald-500"></i> 생성된 전체 덱 현황 (방 · 과목 · 교수 · 단원별)
+              </h2>
+              <input id="admin-deck-search" type="text" placeholder="방 코드, 과목, 교수, 작성자 검색..." class="w-full sm:w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs" />
+            </div>
+            <div id="admin-decks-list" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Section 3: Anonymous Feedback & Bug Reports Inbox -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-extrabold flex items-center gap-1.5">
+                <i data-lucide="inbox" class="w-4 h-4 text-amber-500"></i> 익명 오류 · 건의 제보함
+              </h2>
+              <span id="admin-feedback-count" class="text-xs font-bold text-slate-400">0건</span>
+            </div>
+            <div id="admin-feedback-list" class="space-y-2"></div>
+          </div>
+        </section>
       </main>
     </div>
+
+    <!-- Persistent Global Footer: Copyright Notice & Anonymous Feedback Button -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-4 py-2.5">
+      <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+        <p class="text-center sm:text-left">본 앱에 등록되는 모든 문제, 텍스트, 사진 등 학습 자료의 저작권은 원 제작자에게 있습니다.</p>
+        <button id="btn-open-feedback" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition shrink-0">
+          <i data-lucide="message-circle-warning" class="w-3.5 h-3.5"></i>
+          <span>익명 오류 · 건의 제보</span>
+        </button>
+      </div>
+    </footer>
   </div>
 
   <!-- MODAL 1: LIVE SPLIT CARD EDITOR -->
@@ -837,6 +1013,13 @@
           <select id="apkg-chapter" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold"></select>
         </div>
 
+        <label class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer text-xs">
+          <span class="flex items-center gap-2">
+            <input id="apkg-opt-images" type="checkbox" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+            <span><strong>이미지 용량 최적화 (권장)</strong> <span class="text-slate-400 text-[11px] block sm:inline sm:ml-1">가로 1,600px · WebP 82% (원본 고화질 필요 시 체크 해제)</span></span>
+          </span>
+        </label>
+
         <div id="apkg-dropzone" class="relative border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-2xl p-5 text-center bg-white/80 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-900 transition cursor-pointer">
           <input id="apkg-file-input" type="file" accept=".apkg" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
           <div class="flex flex-col items-center gap-1.5 pointer-events-none">
@@ -938,6 +1121,28 @@
     </div>
   </div>
 
+  <!-- MODAL 6B: JOIN STUDY GROUP BY INVITE CODE -->
+  <div id="modal-join-group" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
+      <h3 class="text-base font-extrabold">초대 코드로 스터디 참여</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400">스터디원이 만든 초대 코드를 입력하면 해당 스터디 방에 바로 입장해 실시간으로 카드를 공유할 수 있어요.</p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">스터디 초대 코드 <span class="text-rose-500">*</span></label>
+          <input id="jg-code" type="text" placeholder="예: MC-ABCD-2026" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm font-mono font-bold uppercase" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">스터디 표시 이름 (선택)</label>
+          <input id="jg-name" type="text" placeholder="예: 해부학 기말 스터디" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="btn-jg-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
+        <button id="btn-jg-join" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">참여하고 동기화</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 7: RENAME / MOVE / ADD TAXONOMY ITEM -->
   <div id="modal-tax-action" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
@@ -969,84 +1174,171 @@
     </div>
   </div>
 
-  <!-- MODAL 8: SUPABASE REAL-TIME STUDY SYNC -->
+  <!-- MODAL 8: SUPABASE ACCOUNT LOGIN & REAL-TIME STUDY SYNC -->
   <div id="modal-sync" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scroll p-5 space-y-4 shadow-2xl animate-fade-up">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span id="sync-modal-dot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-          <h3 class="text-base font-extrabold">Supabase 실시간 스터디 동기화</h3>
+          <h3 class="text-base font-extrabold">계정 로그인 & 실시간 스터디 동기화</h3>
         </div>
         <button id="btn-close-sync" type="button" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-        같은 <strong>Supabase 프로젝트 + 방 코드</strong>로 연결된 스터디원끼리 카드 수정·추가·댓글이 실시간 반영됩니다.
-        <strong>복습 타이머(1분·5분·10분·1일)와 암기 진도는 각자 기기에 독립 저장</strong>됩니다.
-      </p>
+      <!-- Logged-in Account Banner -->
+      <div id="auth-user-banner" class="hidden p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2">
+        <div class="text-xs">
+          <div class="font-extrabold text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+            <span id="auth-user-label">로그인됨</span>
+          </div>
+          <p class="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-0.5">자동 로그인이 활성화되어 있어 다음 방문 시 바로 입장됩니다.</p>
+        </div>
+        <button id="btn-auth-logout" type="button" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600 transition">로그아웃</button>
+      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1">내 닉네임 (수정자 표시)</label>
-          <input id="sync-nickname" type="text" placeholder="예: 김민지" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-semibold" />
+      <!-- Step 1: Server & Room Connection -->
+      <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">1. 스터디 서버 & 방 연결</span>
+          <button id="btn-copy-sync-invite" type="button" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hover:bg-indigo-100 transition">
+            <i data-lucide="link" class="w-3 h-3"></i> 팀원 초대 링크 복사
+          </button>
         </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-500 mb-1">스터디 방 코드 (팀원과 동일하게 입력)</label>
-          <input id="sync-room" type="text" placeholder="예: PHYSIO-2026" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-mono font-bold" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">스터디 방 코드</label>
+            <input id="sync-room" type="text" placeholder="예: PHYSIO-2026" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">내 닉네임</label>
+            <input id="sync-nickname" type="text" placeholder="예: 알바트로스" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Project URL</label>
+            <input id="sync-url" type="url" placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Publishable / Anon Key</label>
+            <input id="sync-key" type="password" placeholder="sb_publishable_... 또는 eyJhbGci..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono" />
+          </div>
         </div>
-        <div class="sm:col-span-2">
-          <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Project URL</label>
-          <input id="sync-url" type="url" placeholder="https://xxxxxxxxxxxx.supabase.co" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-mono" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-[11px] font-bold text-slate-500 mb-1">Supabase Publishable / Anon Key</label>
-          <input id="sync-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-mono" />
-        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-sync-connect-now" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">실시간 스터디 서버 연결</button>
       </div>
 
       <div id="sync-feedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-sync-connect" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">연결 및 실시간 동기화 시작</button>
-          <button id="btn-sync-push-all" type="button" class="hidden px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">내 카드 전체 방에 올리기</button>
-        </div>
-        <button id="btn-sync-disconnect" type="button" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/50">연결 해제</button>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <button id="btn-sync-push-all" type="button" class="hidden px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">내 카드 전체 방에 올리기</button>
+        <button id="btn-sync-disconnect" type="button" class="hidden px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/50 ml-auto">연결 해제</button>
       </div>
 
-      <!-- 1-Minute Supabase SQL Setup Box -->
+      <!-- Progress Table SQL Setup Box -->
       <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">처음 설정하기 (무료 Supabase 1분 세팅)</span>
+          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">개인 복습 진도 동기화 테이블 SQL (최초 1회 실행)</span>
           <button id="btn-copy-sql" type="button" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 transition">SQL 복사</button>
         </div>
-        <ol class="list-decimal pl-4 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-          <li><strong>supabase.com</strong>에서 무료 프로젝트 생성 → 좌측 <strong>SQL Editor</strong>에 아래 코드를 붙여넣고 <strong>Run</strong> 클릭</li>
-          <li><strong>Project Settings → API</strong>에서 <code>Project URL</code>과 <code>anon / publishable key</code>를 복사해 위에 입력</li>
-          <li>스터디원들에게 URL, Key, 방 코드만 공유하면 모든 카드 수정이 실시간 동기화됩니다.</li>
-        </ol>
-        <pre id="sync-sql-code" class="p-3 rounded-xl bg-slate-900 text-emerald-300 text-[11px] font-mono overflow-x-auto leading-relaxed">create table if not exists public.mc_cards (
-  id text primary key,
-  room_code text not null,
-  subject_name text not null default '미분류',
-  prof_name text not null default '담당 교수',
-  chapter_name text not null default '1장',
-  front text not null,
-  back text not null default '',
-  tags jsonb not null default '[]'::jsonb,
-  starred boolean not null default false,
-  author text not null default '스터디원',
-  updated_by text not null default '스터디원',
-  comments jsonb not null default '[]'::jsonb,
-  updated_at timestamptz not null default now()
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+          Supabase <strong>SQL Editor</strong> 새 탭에서 아래 코드를 1회 실행하고, <strong>Authentication → Providers → Email</strong>에서 <em>Confirm email</em>을 끄면 이메일 인증 없이 바로 가입·로그인됩니다.
+        </p>
+        <pre id="sync-sql-code" class="p-3 rounded-xl bg-slate-900 text-emerald-300 text-[11px] font-mono overflow-x-auto leading-relaxed">create table if not exists public.mc_user_progress (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  card_id text not null,
+  reps int not null default 0,
+  interval_days double precision not null default 0,
+  ease double precision not null default 2.5,
+  due_at bigint not null default 0,
+  last_result int,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, card_id)
 );
 
-alter table public.mc_cards enable row level security;
-drop policy if exists "mc_room_all" on public.mc_cards;
-create policy "mc_room_all" on public.mc_cards for all using (true) with check (true);
-alter publication supabase_realtime add table public.mc_cards;</pre>
+alter table public.mc_user_progress enable row level security;
+drop policy if exists "mc_own_progress" on public.mc_user_progress;
+create policy "mc_own_progress" on public.mc_user_progress
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant all on table public.mc_user_progress to authenticated;</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: LONG-PRESS CONTEXT ACTION MENU FOR SUBJECT / PROFESSOR / CHAPTER -->
+  <div id="modal-tree-menu" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-4 space-y-3 shadow-2xl animate-fade-up">
+      <div class="flex items-center justify-between px-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="min-w-0">
+          <span id="tree-menu-type" class="text-[10px] font-bold uppercase tracking-wider text-indigo-500">분류 메뉴</span>
+          <h3 id="tree-menu-title" class="text-sm font-extrabold text-slate-900 dark:text-white truncate"></h3>
+        </div>
+        <button id="btn-tree-menu-close" type="button" class="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="tree-menu-actions" class="space-y-1.5"></div>
+      <div id="tree-menu-del-confirm" class="hidden p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 space-y-2.5">
+        <p id="tree-menu-del-msg" class="text-xs font-bold text-rose-700 dark:text-rose-300 leading-relaxed"></p>
+        <div class="flex items-center justify-end gap-2">
+          <button id="btn-tree-del-cancel" type="button" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">취소</button>
+          <button id="btn-tree-del-ok" type="button" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">완전 삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 10: ADMIN PIN VERIFICATION -->
+  <div id="modal-admin-pin" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xs p-5 space-y-4 shadow-2xl animate-fade-up">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-extrabold flex items-center gap-1.5"><i data-lucide="shield" class="w-4 h-4 text-indigo-500"></i> 관리자 인증</h3>
+        <button id="btn-admin-pin-close" type="button" class="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500">관리자 PIN 번호</label>
+        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="PIN 입력 (기본: 2026)" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <p id="admin-pin-err" class="hidden text-[11px] font-bold text-rose-500 text-center">PIN 번호가 일치하지 않습니다.</p>
+      </div>
+      <button id="btn-admin-pin-submit" type="button" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">관리자 페이지 열기</button>
+    </div>
+  </div>
+
+  <!-- MODAL 11: ANONYMOUS BUG / SUGGESTION REPORT -->
+  <div id="modal-feedback" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-extrabold flex items-center gap-1.5">
+            <i data-lucide="message-circle-warning" class="w-4 h-4 text-indigo-500"></i> 익명 오류 · 건의 제보
+          </h3>
+          <p class="text-[11px] text-slate-500 mt-0.5">이름과 학번은 전송되지 않으며, 완전 익명으로 관리자에게 전달됩니다.</p>
+        </div>
+        <button id="btn-close-feedback" type="button" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">유형 선택</label>
+          <select id="fb-category" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-semibold">
+            <option value="오류 제보">🐛 오류 제보 (버그 / 화면 깨짐)</option>
+            <option value="기능 건의">💡 기능 건의 / 개선 아이디어</option>
+            <option value="카드 신고">⚠️ 부적절한 카드 · 저작권 신고</option>
+            <option value="기타">💬 기타 의견</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">내용 <span class="text-rose-500">*</span></label>
+          <textarea id="fb-content" rows="4" placeholder="발견한 오류나 바라는 기능을 편하게 적어주세요..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="btn-fb-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
+        <button id="btn-fb-submit" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">익명으로 보내기</button>
       </div>
     </div>
   </div>
@@ -1075,224 +1367,23 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
       function getDefaultState() {
         return {
           theme: 'light',
-          todayReviewed: 6,
+          sampleCleaned: true,
+          todayReviewed: 0,
           dailyGoal: 20,
-          weeklyReviews: [12, 18, 9, 22, 15, 25, 6],
-          taxonomy: [
-            {
-              id: 'sub_physio',
-              name: '인체생리학',
-              color: 'indigo',
-              professors: [
-                {
-                  id: 'prof_kim',
-                  name: '김민수 교수',
-                  chapters: [
-                    { id: 'ch_p1', name: '1장. 세포막과 물질이동' },
-                    { id: 'ch_p2', name: '2장. 활동전위와 시냅스' },
-                    { id: 'ch_p3', name: '3장. 심혈관계 생리' }
-                  ]
-                },
-                {
-                  id: 'prof_choi',
-                  name: '최윤정 교수',
-                  chapters: [
-                    { id: 'ch_p4', name: '4장. 신장과 체액조절' }
-                  ]
-                }
-              ]
-            },
-            {
-              id: 'sub_algo',
-              name: '자료구조와 알고리즘',
-              color: 'emerald',
-              professors: [
-                {
-                  id: 'prof_lee',
-                  name: '이서연 교수',
-                  chapters: [
-                    { id: 'ch_a1', name: '1장. 시간복잡도와 점근표기' },
-                    { id: 'ch_a2', name: '2장. 트리와 균형이진탐색트리' },
-                    { id: 'ch_a3', name: '3장. 최단경로(Dijkstra/Bellman-Ford)' }
-                  ]
-                }
-              ]
-            },
-            {
-              id: 'sub_econ',
-              name: '미시경제학',
-              color: 'amber',
-              professors: [
-                {
-                  id: 'prof_park',
-                  name: '박준호 교수',
-                  chapters: [
-                    { id: 'ch_e1', name: '1장. 소비자선택이론과 무차별곡선' },
-                    { id: 'ch_e2', name: '2장. 게임이론과 내시균형' }
-                  ]
-                }
-              ]
-            }
-          ],
+          weeklyReviews: [0, 0, 0, 0, 0, 0, 0],
+          taxonomy: [],
           groups: [
             {
-              id: 'grp_med',
-              name: '2026-2 생리학 A+ 스터디',
-              desc: '김민수·최윤정 교수님 강의 단원별로 돌아가며 족보 & 빈칸 카드 정리하는 스터디입니다.',
-              inviteCode: 'MC-PHYSIO-2026',
+              id: 'grp_default',
+              name: '내 스터디 그룹',
+              desc: '스터디원과 카드를 공유하고 함께 복습하는 공간입니다.',
+              inviteCode: 'MC-STUDY-2026',
               members: [
-                { name: CURRENT_USER, reviewed: 6, streak: 7, role: '방장' },
-                { name: '김지민', reviewed: 24, streak: 11, role: '멤버' },
-                { name: '이도현', reviewed: 18, streak: 5, role: '멤버' },
-                { name: '박서아', reviewed: 14, streak: 4, role: '멤버' }
-              ]
-            },
-            {
-              id: 'grp_cs',
-              name: '알고리즘 기말 & 코테 대비반',
-              desc: '이서연 교수님 필기 핵심 + 시간복잡도 증명 카드를 함께 공유합니다.',
-              inviteCode: 'MC-ALGO-9912',
-              members: [
-                { name: CURRENT_USER, reviewed: 6, streak: 7, role: '멤버' },
-                { name: '정우성', reviewed: 31, streak: 14, role: '방장' },
-                { name: '한소희', reviewed: 19, streak: 6, role: '멤버' }
+                { name: CURRENT_USER, reviewed: 0, streak: 1, role: '방장' }
               ]
             }
           ],
-          cards: [
-            {
-              id: 'c_1',
-              subjectId: 'sub_physio',
-              profId: 'prof_kim',
-              chapterId: 'ch_p1',
-              front: 'Na+/K+-ATPase 펌프는 ATP 1분자를 가수분해하여 {{c1::Na+ 3개}}를 세포 밖으로, {{c2::K+ 2개}}를 세포 안으로 능동수송한다.',
-              back: '전기발생적(electrogenic) 펌프로서 안정막전위 유지에 기여하며, ==Ouabain==이나 Digitalis에 의해 억제됩니다.\n• 세포 외 Na+ 농도 유지\n• 세포 부피 조절(삼투압 균형)',
-              profNote: '김민수 교수님이 Ouabain 억제 기전과 3:2 비율은 객관식 필수 출제라고 강조하심!',
-              tags: ['중간고사', '빈칸', '족보'],
-              starred: true,
-              sharedGroupId: 'grp_med',
-              author: CURRENT_USER,
-              likes: 4,
-              srs: { reps: 1, intervalDays: 1, ease: 2.5, dueAt: hoursFromNow(-2), lastResult: 3 },
-              comments: [
-                { id: 'cm_1', author: '김지민', type: 'comment', text: '암기 팁: "나(Na)는 셋(3)이서 밖으로 나가고, 칼(K)은 둘(2)이서 안으로!"', createdAt: '2시간 전', applied: false }
-              ]
-            },
-            {
-              id: 'c_2',
-              subjectId: 'sub_physio',
-              profId: 'prof_kim',
-              chapterId: 'ch_p2',
-              front: '신경세포 활동전위의 탈분극(Depolarization) 단계에서 급격히 열리는 이온 통로는 무엇인가?',
-              back: '**전압개폐성 Na+ 통로(Voltage-gated Na+ channel)**의 활성화 게이트가 빠르게 열리면서 Na+가 세포 내로 유입됩니다.\n이후 불활성화 게이트가 닫히고 지연 정류 K+ 통로가 열리며 재분극이 일어납니다.',
-              profNote: '절대불응기(Na+ 통로 불활성화)와 상대불응기(K+ 과분극) 구분 서술형 주의',
-              tags: ['활동전위', '서술형'],
-              starred: true,
-              sharedGroupId: 'grp_med',
-              author: '김지민',
-              likes: 6,
-              srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: hoursFromNow(-1), lastResult: null },
-              comments: [
-                { id: 'cm_2', author: '이도현', type: 'suggestion', text: '**전압개폐성 Na+ 통로(Voltage-gated Na+ channel)**가 열리며 Na+ 유입으로 막전위가 +30mV까지 상승합니다. (TTX 독소로 차단됨 추가!)', createdAt: '1시간 전', applied: false }
-              ]
-            },
-            {
-              id: 'c_3',
-              subjectId: 'sub_physio',
-              profId: 'prof_kim',
-              chapterId: 'ch_p3',
-              front: '심박출량(Cardiac Output, CO)의 공식과 프랭크-스탈링 법칙(Frank-Starling Law)의 핵심 원리는?',
-              back: '`CO = HR(심박수) × SV(일회박출량)`\n프랭크-스탈링 법칙: 정맥환류량 증가 → ==이완기말 용적(EDV) 증가== → 심근섬유 신전 → 수축력 및 일회박출량(SV) 증가.',
-              profNote: '전부하(Preload)와 후부하(Afterload) 그래프 변화와 연결해서 출제됨',
-              tags: ['심혈관', '공식'],
-              starred: false,
-              sharedGroupId: 'grp_med',
-              author: '박서아',
-              likes: 3,
-              srs: { reps: 2, intervalDays: 6, ease: 2.6, dueAt: hoursFromNow(72), lastResult: 4 },
-              comments: []
-            },
-            {
-              id: 'c_4',
-              subjectId: 'sub_physio',
-              profId: 'prof_choi',
-              chapterId: 'ch_p4',
-              front: '신장의 헨레고리(Loop of Henle) {{c1::하행각}}은 물 투과성이 높고, {{c2::상행각 굵은 부분}}은 물에 불투과성이며 Na+-K+-2Cl- 공수송체가 존재한다.',
-              back: '이 구조적 차이가 신수질의 **역류증폭기전(Countercurrent multiplier)**을 형성하여 고장성 수질 간질을 만듭니다.\n• Loop diuretics(Furosemide)가 상행각 굵은 부분의 NKCC2 억제',
-              profNote: '최윤정 교수님 슬라이드 18p 표 그대로 외우기',
-              tags: ['신장', '이뇨제'],
-              starred: true,
-              sharedGroupId: 'grp_med',
-              author: '이도현',
-              likes: 5,
-              srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: hoursFromNow(-3), lastResult: null },
-              comments: []
-            },
-            {
-              id: 'c_5',
-              subjectId: 'sub_algo',
-              profId: 'prof_lee',
-              chapterId: 'ch_a2',
-              front: 'Red-Black Tree와 AVL Tree의 균형 유지 강도 및 삽입/삭제 성능 차이를 비교하시오.',
-              back: '• **AVL Tree**: 높이 차이를 최대 1로 엄격하게 유지 → ==탐색(Lookup)이 더 빠름==, 하지만 삽입/삭제 시 회전(Rotation)이 잦음.\n• **Red-Black Tree**: 최장 경로가 최단 경로의 2배 이하 → 삽입/삭제 시 최대 2~3회 회전으로 **수정 빈도가 높은 환경(C++ std::map 등)**에 유리.',
-              profNote: '이서연 교수님 기말 단골 비교 문제',
-              tags: ['트리', '비교'],
-              starred: true,
-              sharedGroupId: 'grp_cs',
-              author: '정우성',
-              likes: 7,
-              srs: { reps: 1, intervalDays: 1, ease: 2.5, dueAt: hoursFromNow(-1), lastResult: 3 },
-              comments: []
-            },
-            {
-              id: 'c_6',
-              subjectId: 'sub_algo',
-              profId: 'prof_lee',
-              chapterId: 'ch_a3',
-              front: '다익스트라(Dijkstra) 알고리즘이 {{c1::음수 가중치 간선}}이 있는 그래프에서 실패하는 이유는?',
-              back: '다익스트라는 탐욕적(Greedy)으로 현재 가장 짧은 거리의 정점을 확정(`visited`)합니다.\n음수 간선이 존재하면 **이미 확정된 정점으로 더 짧은 우회 경로가 나중에 발견될 수 있어** 최적 부분 구조가 깨집니다. (대안: `Bellman-Ford` O(VE))',
-              profNote: '반례 그래프를 직접 그릴 수 있어야 함!',
-              tags: ['그래프', '최단경로'],
-              starred: false,
-              sharedGroupId: 'grp_cs',
-              author: CURRENT_USER,
-              likes: 4,
-              srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: hoursFromNow(-4), lastResult: null },
-              comments: []
-            },
-            {
-              id: 'c_7',
-              subjectId: 'sub_econ',
-              profId: 'prof_park',
-              chapterId: 'ch_e1',
-              front: '소비자 균형 조건에서 한계대체율(MRS)과 상대가격의 관계식은?',
-              back: '`MRS_xy = MU_x / MU_y = P_x / P_y`\n무차별곡선의 접선 기울기와 예산선의 기울기가 일치하는 점에서 효용이 극대화됩니다. (단, 내부해 및 강볼록 선호 가정)',
-              profNote: '모서리해(Corner solution) 예외 케이스 반드시 체크',
-              tags: ['미시', '수식'],
-              starred: false,
-              sharedGroupId: '',
-              author: CURRENT_USER,
-              likes: 0,
-              srs: { reps: 3, intervalDays: 10, ease: 2.6, dueAt: hoursFromNow(120), lastResult: 4 },
-              comments: []
-            },
-            {
-              id: 'c_8',
-              subjectId: 'sub_econ',
-              profId: 'prof_park',
-              chapterId: 'ch_e2',
-              front: '내시균형(Nash Equilibrium)의 정의는 무엇인가?',
-              back: '상대방의 전략이 주어졌을 때, **어느 경기자도 자신의 전략을 일방적으로 변경하여 보수를 높일 유인이 없는 전략 조합**입니다.\n• 모든 우월전략 균형은 내시균형이지만, 역은 성립하지 않음.',
-              profNote: '박준호 교수님: 죄수의 딜레마와 파레토 효율성 차이 연결 출제',
-              tags: ['게임이론', '기말'],
-              starred: true,
-              sharedGroupId: '',
-              author: CURRENT_USER,
-              likes: 0,
-              srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: hoursFromNow(-1), lastResult: null },
-              comments: []
-            }
-          ]
+          cards: []
         };
       }
 
@@ -1331,6 +1422,18 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           if (raw) {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.taxonomy) && Array.isArray(parsed.cards)) {
+              if (!parsed.sampleCleaned) {
+                const sampleSubs = new Set(['sub_physio', 'sub_algo', 'sub_econ']);
+                const sampleCards = new Set(['c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6', 'c_7', 'c_8']);
+                parsed.taxonomy = parsed.taxonomy.filter(sub => !sampleSubs.has(sub.id));
+                parsed.cards = parsed.cards.filter(c => !sampleCards.has(c.id) && !sampleSubs.has(c.subjectId));
+                parsed.groups = (parsed.groups || []).filter(g => g.id !== 'grp_med' && g.id !== 'grp_cs');
+                if (!parsed.groups.length) {
+                  parsed.groups = [{ id: 'grp_default', name: '내 스터디 그룹', desc: '스터디원과 카드를 공유하고 함께 복습하는 공간입니다.', inviteCode: 'MC-STUDY-2026', members: [{ name: CURRENT_USER, reviewed: 0, streak: 1, role: '방장' }] }];
+                }
+                parsed.sampleCleaned = true;
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); } catch (e) {}
+              }
               return parsed;
             }
           }
@@ -1576,6 +1679,7 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         if (ui.activeTab === 'study') renderStudyView();
         if (ui.activeTab === 'studygroup') renderStudyGroupView();
         if (ui.activeTab === 'analytics') renderAnalyticsView();
+        if (ui.activeTab === 'admin') renderAdminView();
         if (window.lucide) lucide.createIcons();
       }
 
@@ -1592,7 +1696,7 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           }`;
         });
 
-        ['library', 'study', 'studygroup', 'analytics'].forEach(t => {
+        ['library', 'study', 'studygroup', 'analytics', 'admin'].forEach(t => {
           const sec = document.getElementById('view-' + t);
           if (sec) sec.classList.toggle('hidden', t !== ui.activeTab);
         });
@@ -1618,6 +1722,15 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         });
 
         const tree = document.getElementById('taxonomy-tree');
+        if (!state.taxonomy.length) {
+          tree.innerHTML = `
+            <div class="p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2.5 my-2">
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">등록된 과목·덱이 없습니다.<br>새 과목을 만들거나 .apkg 파일을 올려보세요.</p>
+              <button type="button" id="btn-empty-add-sub" class="w-full py-1.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 transition">+ 첫 과목 추가</button>
+            </div>
+          `;
+          return;
+        }
         tree.innerHTML = state.taxonomy.map(sub => {
           const subCards = state.cards.filter(c => c.subjectId === sub.id);
           const subDue = subCards.filter(isDue).length;
@@ -1634,38 +1747,29 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
               const chCount = profCards.filter(c => c.chapterId === ch.id).length;
               const isSelCh = ui.filterChapter === ch.id;
               return `
-                <div class="tree-row flex items-center rounded-lg pl-8 pr-1.5 ${
+                <div data-lp-type="chap" data-lp-id="${sub.id}|${prof.id}|${ch.id}" class="tree-row flex items-center rounded-lg pl-8 pr-2.5 ${
                     isSelCh
                       ? 'bg-indigo-100/80 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                   }">
-                  <button type="button" data-tree-chap="${sub.id}|${prof.id}|${ch.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 pr-1 text-xs text-left">
+                  <button type="button" data-tree-chap="${sub.id}|${prof.id}|${ch.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 text-xs text-left">
                     <span class="truncate">${escapeHtml(ch.name)}</span>
-                    <span class="text-[10px] opacity-70 ml-1 shrink-0">${chCount}</span>
+                    <span class="text-[11px] opacity-70 ml-2 shrink-0">${chCount}</span>
                   </button>
-                  <div class="tree-actions flex items-center gap-0.5 shrink-0">
-                    <button type="button" data-rename-chap="${sub.id}|${prof.id}|${ch.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600" title="단원 이름 바꾸기"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                    <button type="button" data-move-chap="${sub.id}|${prof.id}|${ch.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-emerald-600" title="다른 과목/교수로 옮기기"><i data-lucide="arrow-right-left" class="w-3 h-3"></i></button>
-                  </div>
                 </div>
               `;
             }).join('') : '';
 
             return `
               <div class="mt-0.5">
-                <div class="tree-row flex items-center rounded-lg pr-1.5 ${isSelProf ? 'bg-indigo-50 dark:bg-indigo-950/60' : 'hover:bg-slate-100 dark:hover:bg-slate-800/60'}">
+                <div data-lp-type="prof" data-lp-id="${sub.id}|${prof.id}" class="tree-row flex items-center rounded-lg pr-2.5 ${isSelProf ? 'bg-indigo-50 dark:bg-indigo-950/60' : 'hover:bg-slate-100 dark:hover:bg-slate-800/60'}">
                   <button type="button" data-toggle-prof="${prof.id}" class="p-1.5 pl-3.5 text-slate-400 hover:text-slate-600 shrink-0">
                     <i data-lucide="${isExpProf ? 'chevron-down' : 'chevron-right'}" class="w-3.5 h-3.5"></i>
                   </button>
-                  <button type="button" data-tree-prof="${sub.id}|${prof.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 pr-1 text-xs font-semibold ${isSelProf ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}">
+                  <button type="button" data-tree-prof="${sub.id}|${prof.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 text-xs font-semibold ${isSelProf ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}">
                     <span class="truncate flex items-center gap-1.5"><i data-lucide="user-round" class="w-3 h-3 text-slate-400 shrink-0"></i><span class="truncate">${escapeHtml(prof.name)}</span></span>
-                    <span class="text-[10px] text-slate-400 ml-1 shrink-0">${profCards.length}</span>
+                    <span class="text-[11px] text-slate-400 ml-2 shrink-0">${profCards.length}</span>
                   </button>
-                  <div class="tree-actions flex items-center gap-0.5 shrink-0">
-                    <button type="button" data-quick-add-chap="${sub.id}|${prof.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600" title="새 단원 추가"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                    <button type="button" data-rename-prof="${sub.id}|${prof.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600" title="교수 이름 바꾸기"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                    <button type="button" data-move-prof="${sub.id}|${prof.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-emerald-600" title="다른 과목으로 옮기기"><i data-lucide="arrow-right-left" class="w-3 h-3"></i></button>
-                  </div>
                 </div>
                 <div class="space-y-0.5 mt-0.5">${chapHtml}</div>
               </div>
@@ -1674,24 +1778,20 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
 
           return `
             <div>
-              <div class="tree-row flex items-center rounded-xl pr-1.5 ${isSelSub ? 'bg-indigo-50 dark:bg-indigo-950/70' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70'}">
+              <div data-lp-type="sub" data-lp-id="${sub.id}" class="tree-row flex items-center rounded-xl pr-2.5 ${isSelSub ? 'bg-indigo-50 dark:bg-indigo-950/70' : 'hover:bg-slate-100 dark:hover:bg-slate-800/70'}">
                 <button type="button" data-toggle-sub="${sub.id}" class="p-1.5 text-slate-400 hover:text-slate-600 shrink-0">
                   <i data-lucide="${isExpSub ? 'chevron-down' : 'chevron-right'}" class="w-3.5 h-3.5"></i>
                 </button>
-                <button type="button" data-tree-sub="${sub.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 pr-1 text-sm font-bold ${isSelSub ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-800 dark:text-slate-200'}">
+                <button type="button" data-tree-sub="${sub.id}" class="flex-1 min-w-0 flex items-center justify-between py-1.5 text-sm font-bold ${isSelSub ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-800 dark:text-slate-200'}">
                   <span class="truncate flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dotClass}"></span>
                     <span class="truncate">${escapeHtml(sub.name)}</span>
                   </span>
-                  <span class="flex items-center gap-1 shrink-0 ml-1">
+                  <span class="flex items-center gap-1.5 shrink-0 ml-2">
                     ${subDue > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-300 font-bold">${subDue}</span>` : ''}
                     <span class="text-xs text-slate-400 font-medium">${subCards.length}</span>
                   </span>
                 </button>
-                <div class="tree-actions flex items-center gap-0.5 shrink-0">
-                  <button type="button" data-quick-add-prof="${sub.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600" title="새 교수 추가"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                  <button type="button" data-rename-sub="${sub.id}" class="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600" title="과목 이름 바꾸기"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                </div>
               </div>
               <div class="space-y-0.5">${profHtml}</div>
             </div>
@@ -2151,6 +2251,7 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         promoteExpiredSessionCards(true);
 
         saveState();
+        syncSaveUserProgress(card);
 
         const hasWaiting = getShortTermWaitingCards().length > 0;
         if (ui.studyIndex >= ui.studyQueue.length && !hasWaiting && window.confetti) {
@@ -2398,6 +2499,10 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         document.getElementById('editor-modal-title').textContent = card ? '플래시카드 수정' : '새 플래시카드 작성';
         document.getElementById('btn-editor-delete').classList.toggle('hidden', !card);
 
+        if (!state.taxonomy.length) {
+          ensureTaxonomyPath('기본 과목', '담당 교수', '1장');
+          saveState();
+        }
         const defaultSub = card?.subjectId || (ui.filterSubject !== 'all' ? ui.filterSubject : state.taxonomy[0]?.id);
         const defaultProf = card?.profId || (ui.filterProf !== 'all' ? ui.filterProf : null);
         const defaultChap = card?.chapterId || (ui.filterChapter !== 'all' ? ui.filterChapter : null);
@@ -2757,8 +2862,13 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         const backVal = document.getElementById('apkg-map-back').value;
         const keepHtml = document.getElementById('apkg-keep-html').checked;
 
+        const imgCnt = Object.keys(pendingApkg.mediaDataMap).length;
+        const fmtMb = b => (b >= 1024 * 1024) ? `${(b / (1024 * 1024)).toFixed(1)}MB` : `${Math.max(1, Math.round(b / 1024))}KB`;
+        const sizeInfo = (imgCnt > 0 && pendingApkg.origImgBytes > pendingApkg.finalImgBytes)
+          ? `, ${fmtMb(pendingApkg.origImgBytes)} → ${fmtMb(pendingApkg.finalImgBytes)} 최적화`
+          : '';
         document.getElementById('apkg-preview-summary').textContent =
-          `"${pendingApkg.fileName}" 분석 완료 — 총 ${pendingApkg.notes.length}장 (이미지 ${Object.keys(pendingApkg.mediaDataMap).length}개)`;
+          `"${pendingApkg.fileName}" 분석 완료 — 총 ${pendingApkg.notes.length}장 (이미지 ${imgCnt}개${sizeInfo})`;
         document.getElementById('apkg-detected-model').textContent =
           `노트 타입: ${pendingApkg.primaryModelName}`;
 
@@ -2884,7 +2994,37 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
             });
           });
 
+          const optimizeImages = !!document.getElementById('apkg-opt-images')?.checked;
+          const optimizeDataUri = (dataUri, origBytes) => new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => {
+              const maxW = 1600;
+              if (origBytes <= 150 * 1024 && img.naturalWidth <= maxW) {
+                resolve(dataUri);
+                return;
+              }
+              const scale = img.naturalWidth > maxW ? (maxW / img.naturalWidth) : 1;
+              const w = Math.max(1, Math.round(img.naturalWidth * scale));
+              const h = Math.max(1, Math.round(img.naturalHeight * scale));
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              let outUri = canvas.toDataURL('image/webp', 0.82);
+              if (!outUri.startsWith('data:image/webp')) {
+                outUri = canvas.toDataURL('image/jpeg', 0.85);
+              }
+              // Only keep compressed version if it actually saves space
+              resolve(outUri.length < dataUri.length ? outUri : dataUri);
+            };
+            img.onerror = () => resolve(dataUri);
+            img.src = dataUri;
+          });
+
           const mediaDataMap = {};
+          let origImgBytes = 0;
+          let finalImgBytes = 0;
           const mediaFile = zip.file('media');
           if (mediaFile && neededMedia.size > 0) {
             try {
@@ -2897,7 +3037,17 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
                 if (!binEntry) continue;
                 const b64 = await binEntry.async('base64');
                 const mime = ext === 'jpg' ? 'image/jpeg' : ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
-                mediaDataMap[origName] = `data:${mime};base64,${b64}`;
+                const rawUri = `data:${mime};base64,${b64}`;
+                const rawSize = Math.round(b64.length * 0.75);
+                origImgBytes += rawSize;
+                if (optimizeImages && !['svg', 'gif'].includes(ext)) {
+                  const optUri = await optimizeDataUri(rawUri, rawSize);
+                  mediaDataMap[origName] = optUri;
+                  finalImgBytes += Math.round((optUri.split(',')[1]?.length || b64.length) * 0.75);
+                } else {
+                  mediaDataMap[origName] = rawUri;
+                  finalImgBytes += rawSize;
+                }
               }
             } catch (e) { /* ignore malformed media */ }
           }
@@ -2918,6 +3068,8 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
             baseFileName,
             notes: parsedNotes,
             mediaDataMap,
+            origImgBytes,
+            finalImgBytes,
             primaryModelName: modelInfo?.name || '사용자 정의 노트',
             fieldNames
           };
@@ -3202,6 +3354,117 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         return false;
       }
 
+      // ================= LONG-PRESS CONTEXT MENU & DECK DELETE =================
+      let activeTreeMenu = null;
+      let longPressTimer = null;
+      let longPressTriggered = false;
+
+      function openTreeContextMenu(type, rawId) {
+        const modal = document.getElementById('modal-tree-menu');
+        const actionsEl = document.getElementById('tree-menu-actions');
+        const delConfirm = document.getElementById('tree-menu-del-confirm');
+        delConfirm.classList.add('hidden');
+
+        let title = '';
+        let typeLabel = '';
+        let cardCount = 0;
+        let buttons = [];
+
+        if (type === 'sub') {
+          const sub = getSubject(rawId);
+          if (!sub) return;
+          title = sub.name;
+          typeLabel = '과목 덱';
+          cardCount = state.cards.filter(c => c.subjectId === sub.id).length;
+          activeTreeMenu = { type: 'sub', subId: sub.id, name: sub.name, cardCount };
+          buttons = [
+            { act: 'add-prof', icon: 'plus', label: '새 교수 추가', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'rename', icon: 'pencil', label: '과목 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'delete', icon: 'trash-2', label: `과목(덱) 삭제 (카드 ${cardCount}장 포함)`, cls: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50' }
+          ];
+        } else if (type === 'prof') {
+          const [sId, pId] = rawId.split('|');
+          const prof = getProf(sId, pId);
+          if (!prof) return;
+          title = prof.name;
+          typeLabel = '교수 덱';
+          cardCount = state.cards.filter(c => c.subjectId === sId && c.profId === pId).length;
+          activeTreeMenu = { type: 'prof', subId: sId, profId: pId, name: prof.name, cardCount };
+          buttons = [
+            { act: 'add-chap', icon: 'plus', label: '새 단원 추가', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'rename', icon: 'pencil', label: '교수 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'move', icon: 'arrow-right-left', label: '다른 과목으로 옮기기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'delete', icon: 'trash-2', label: `교수(덱) 삭제 (카드 ${cardCount}장 포함)`, cls: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50' }
+          ];
+        } else if (type === 'chap') {
+          const [sId, pId, cId] = rawId.split('|');
+          const ch = getChapter(sId, pId, cId);
+          if (!ch) return;
+          title = ch.name;
+          typeLabel = '단원 덱';
+          cardCount = state.cards.filter(c => c.chapterId === cId).length;
+          activeTreeMenu = { type: 'chap', subId: sId, profId: pId, chapId: cId, name: ch.name, cardCount };
+          buttons = [
+            { act: 'rename', icon: 'pencil', label: '단원 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'move', icon: 'arrow-right-left', label: '다른 과목·교수로 옮기기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
+            { act: 'delete', icon: 'trash-2', label: `단원(덱) 삭제 (카드 ${cardCount}장 포함)`, cls: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50' }
+          ];
+        }
+
+        document.getElementById('tree-menu-type').textContent = typeLabel;
+        document.getElementById('tree-menu-title').textContent = title;
+        actionsEl.innerHTML = buttons.map(b => `
+          <button type="button" data-tm-act="${b.act}" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-sm font-bold text-left transition ${b.cls}">
+            <i data-lucide="${b.icon}" class="w-4 h-4 shrink-0"></i>
+            <span>${b.label}</span>
+          </button>
+        `).join('');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeTreeContextMenu() {
+        const modal = document.getElementById('modal-tree-menu');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.getElementById('tree-menu-del-confirm').classList.add('hidden');
+        activeTreeMenu = null;
+      }
+
+      function executeTreeDeckDelete() {
+        if (!activeTreeMenu) return;
+        const m = activeTreeMenu;
+        let deletedCardIds = [];
+
+        if (m.type === 'sub') {
+          deletedCardIds = state.cards.filter(c => c.subjectId === m.subId).map(c => c.id);
+          state.cards = state.cards.filter(c => c.subjectId !== m.subId);
+          state.taxonomy = state.taxonomy.filter(s => s.id !== m.subId);
+          if (ui.filterSubject === m.subId) { ui.filterSubject = 'all'; ui.filterProf = 'all'; ui.filterChapter = 'all'; }
+        } else if (m.type === 'prof') {
+          deletedCardIds = state.cards.filter(c => c.subjectId === m.subId && c.profId === m.profId).map(c => c.id);
+          state.cards = state.cards.filter(c => !(c.subjectId === m.subId && c.profId === m.profId));
+          const sub = getSubject(m.subId);
+          if (sub) sub.professors = sub.professors.filter(p => p.id !== m.profId);
+          if (ui.filterProf === m.profId) { ui.filterProf = 'all'; ui.filterChapter = 'all'; }
+        } else if (m.type === 'chap') {
+          deletedCardIds = state.cards.filter(c => c.chapterId === m.chapId).map(c => c.id);
+          state.cards = state.cards.filter(c => c.chapterId !== m.chapId);
+          const prof = getProf(m.subId, m.profId);
+          if (prof) prof.chapters = prof.chapters.filter(ch => ch.id !== m.chapId);
+          if (ui.filterChapter === m.chapId) { ui.filterChapter = 'all'; }
+        }
+
+        saveState();
+        if (deletedCardIds.length) syncDeleteCards(deletedCardIds);
+        const delName = m.name;
+        closeTreeContextMenu();
+        renderAll();
+        showToast(`"${delName}" 덱과 소속 카드 ${deletedCardIds.length}장을 삭제했습니다.`);
+      }
+
       async function generateAndDownloadSampleApkg() {
         try {
           const SQL = await getSqlEngine();
@@ -3291,22 +3554,40 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         document.getElementById('modal-share-io').classList.remove('flex');
       }
 
-      // ================= SUPABASE REAL-TIME SYNC =================
+      // ================= SUPABASE AUTH & REAL-TIME SYNC =================
       let sbClient = null;
       let sbChannel = null;
       let sbConfig = loadSyncConfig();
       let sbConnected = false;
+      let sbUser = null;
+      let authMode = 'login'; // 'login' | 'signup'
 
       function loadSyncConfig() {
+        const embedded = window.MEMOCRAFT_CONFIG || {};
+        let cfg = { url: embedded.url || 'https://xxsfsopzmomhxdrmvtps.supabase.co', key: embedded.key || '', room: 'MC-STUDY-2026', nickname: '', name: '', studentId: '', loggedIn: false, autoConnect: false };
         try {
           const raw = localStorage.getItem(SYNC_KEY);
           if (raw) {
-            const cfg = JSON.parse(raw);
-            if (cfg.nickname) CURRENT_USER = cfg.nickname;
-            return cfg;
+            const parsed = JSON.parse(raw);
+            cfg = { ...cfg, ...parsed };
+            if (!cfg.key && embedded.key) cfg.key = embedded.key;
+            if (!cfg.url && embedded.url) cfg.url = embedded.url;
           }
         } catch (e) {}
-        return { url: '', key: '', room: 'PHYSIO-2026', nickname: '나 (본인)', autoConnect: false };
+        // Auto-fill from team invite URL query params (?url=...&key=...&room=...)
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('url')) cfg.url = params.get('url').trim().replace(/\/rest\/v1\/?$/i, '');
+          if (params.get('key')) cfg.key = params.get('key').trim();
+          if (params.get('room')) cfg.room = params.get('room').trim();
+          if (params.get('gname')) cfg.invitedGroupName = params.get('gname').trim();
+          if (params.get('url') && params.get('key')) {
+            cfg.autoConnect = true;
+            try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch (e) {}
+          }
+        } catch (e) {}
+        if (cfg.nickname) CURRENT_USER = cfg.nickname;
+        return cfg;
       }
 
       function saveSyncConfig() {
@@ -3320,11 +3601,22 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         const mDot = document.getElementById('sync-modal-dot');
         const pushBtn = document.getElementById('btn-sync-push-all');
         const discBtn = document.getElementById('btn-sync-disconnect');
+        const inviteBtn = document.getElementById('btn-copy-sync-invite');
+        const userBanner = document.getElementById('auth-user-banner');
+
         if (dot) dot.className = `w-2 h-2 rounded-full shrink-0 ${connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`;
         if (mDot) mDot.className = `w-2.5 h-2.5 rounded-full ${connected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`;
-        if (label) label.textContent = labelText || (connected ? `실시간 · ${sbConfig.room}` : '실시간 동기화');
+        const userTag = sbUser ? `${CURRENT_USER} · ${sbConfig.room}` : `실시간 · ${sbConfig.room}`;
+        if (label) label.textContent = labelText || (connected ? userTag : '실시간 동기화');
         if (pushBtn) pushBtn.classList.toggle('hidden', !connected);
         if (discBtn) discBtn.classList.toggle('hidden', !connected);
+        if (inviteBtn) inviteBtn.classList.toggle('hidden', !(sbConfig.url && sbConfig.key));
+        if (userBanner) {
+          userBanner.classList.toggle('hidden', !sbConfig.loggedIn);
+          if (sbConfig.loggedIn) {
+            document.getElementById('auth-user-label').textContent = `${sbConfig.name} (${sbConfig.studentId}) · 자동 로그인 중`;
+          }
+        }
       }
 
       function setSyncFeedback(msg, isError) {
@@ -3335,13 +3627,31 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         el.textContent = msg;
       }
 
+      function ensureGroupForRoomCode(roomCode, preferredName) {
+        const code = (roomCode || 'MC-STUDY-2026').trim();
+        let g = state.groups.find(x => x.inviteCode === code);
+        if (!g) {
+          g = {
+            id: uid('grp'),
+            name: preferredName || `스터디 (${code})`,
+            desc: '실시간 동기화로 연결된 스터디 공간입니다.',
+            inviteCode: code,
+            members: [{ name: CURRENT_USER, reviewed: state.todayReviewed, streak: 1, role: '멤버' }]
+          };
+          state.groups.push(g);
+        }
+        return g;
+      }
+
       function cardToSupabaseRow(card) {
         const sub = getSubject(card.subjectId);
         const prof = getProf(card.subjectId, card.profId);
         const chap = getChapter(card.subjectId, card.profId, card.chapterId);
+        const grp = state.groups.find(g => g.id === card.sharedGroupId);
+        const targetRoom = grp ? grp.inviteCode : sbConfig.room;
         return {
           id: card.id,
-          room_code: sbConfig.room,
+          room_code: targetRoom,
           subject_name: sub?.name || '미분류',
           prof_name: prof?.name || '담당 교수',
           chapter_name: chap?.name || '1장',
@@ -3361,7 +3671,6 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         const tax = ensureTaxonomyPath(row.subject_name || '미분류', row.prof_name || '담당 교수', row.chapter_name || '1장');
         const existing = state.cards.find(c => c.id === row.id);
         if (existing) {
-          // Preserve personal SRS progress while updating shared content!
           existing.subjectId = tax.subjectId;
           existing.profId = tax.profId;
           existing.chapterId = tax.chapterId;
@@ -3371,7 +3680,7 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           existing.starred = !!row.starred;
           existing.comments = Array.isArray(row.comments) ? row.comments : [];
           existing.author = row.author || existing.author;
-          if (!existing.sharedGroupId && state.groups[0]) existing.sharedGroupId = state.groups[0].id;
+          const matchedGrp = ensureGroupForRoomCode(row.room_code || sbConfig.room); existing.sharedGroupId = matchedGrp.id;
           if (notify && row.updated_by && row.updated_by !== CURRENT_USER) {
             showToast(`🔄 ${row.updated_by}님이 카드를 실시간 수정했습니다.`, 'success');
           }
@@ -3386,7 +3695,7 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
             profNote: '',
             tags: Array.isArray(row.tags) ? row.tags : [],
             starred: !!row.starred,
-            sharedGroupId: state.groups[0]?.id || '',
+            sharedGroupId: ensureGroupForRoomCode(row.room_code || sbConfig.room).id,
             author: row.author || '스터디원',
             likes: 0,
             srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
@@ -3416,43 +3725,206 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         } catch (e) {}
       }
 
-      async function connectSupabase(isAuto) {
+      async function syncSaveUserProgress(card) {
+        if (!sbClient || !sbUser || !card || !card.srs) return;
+        try {
+          await sbClient.from('mc_user_progress').upsert({
+            user_id: sbUser.id,
+            card_id: card.id,
+            reps: card.srs.reps || 0,
+            interval_days: card.srs.intervalDays || 0,
+            ease: card.srs.ease || 2.5,
+            due_at: card.srs.dueAt || nowMs(),
+            last_result: card.srs.lastResult || null,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id,card_id' });
+        } catch (e) {}
+      }
+
+      async function loadUserProgressFromCloud() {
+        if (!sbClient || !sbUser) return 0;
+        try {
+          const { data, error } = await sbClient
+            .from('mc_user_progress')
+            .select('*')
+            .eq('user_id', sbUser.id);
+          if (error || !data) return 0;
+          let synced = 0;
+          data.forEach(p => {
+            const card = state.cards.find(c => c.id === p.card_id);
+            if (card) {
+              card.srs = {
+                reps: p.reps,
+                intervalDays: p.interval_days,
+                ease: p.ease,
+                dueAt: Number(p.due_at),
+                lastResult: p.last_result
+              };
+              synced++;
+            }
+          });
+          return synced;
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      function ensureSupabaseClient() {
         if (!window.supabase || !window.supabase.createClient) {
-          if (!isAuto) setSyncFeedback('Supabase 클라이언트를 불러오지 못했습니다. 네트워크를 확인해 주세요.', true);
-          return;
+          throw new Error('Supabase 클라이언트를 불러오지 못했습니다. 네트워크를 확인해 주세요.');
         }
-        const url = sbConfig.url.trim();
+        const url = sbConfig.url.trim().replace(/\/rest\/v1\/?$/i, '');
         const key = sbConfig.key.trim();
-        const room = sbConfig.room.trim();
-        if (!url || !key || !room) {
-          if (!isAuto) setSyncFeedback('Project URL, Anon Key, 방 코드를 모두 입력해 주세요.', true);
+        sbConfig.url = url;
+        if (!url || !key) throw new Error('Supabase Project URL과 Key를 먼저 입력해 주세요.');
+        if (!/^https:\/\//i.test(url)) throw new Error('Project URL은 https:// 로 시작해야 합니다.');
+        if (!sbClient || sbClient._mcUrl !== url || sbClient._mcKey !== key) {
+          sbClient = window.supabase.createClient(url, key);
+          sbClient._mcUrl = url;
+          sbClient._mcKey = key;
+        }
+        return sbClient;
+      }
+
+      function setGateFeedback(msg, isError) {
+        const el = document.getElementById('gate-feedback');
+        if (!el) return;
+        el.classList.remove('hidden');
+        el.className = `p-3 rounded-xl text-xs font-semibold ${isError ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'}`;
+        el.textContent = msg;
+      }
+
+      function showAuthGate() {
+        const gate = document.getElementById('auth-gate');
+        const app = document.getElementById('app');
+        document.getElementById('gate-url').value = sbConfig.url || 'https://xxsfsopzmomhxdrmvtps.supabase.co';
+        document.getElementById('gate-key').value = sbConfig.key || '';
+        document.getElementById('gate-name').value = sbConfig.name || '';
+        document.getElementById('gate-student-id').value = sbConfig.studentId || '';
+        document.getElementById('gate-server-fields').classList.add('hidden');
+        const toggleBtn = document.getElementById('btn-gate-toggle-server');
+        if (toggleBtn) toggleBtn.classList.toggle('hidden', !!(window.MEMOCRAFT_CONFIG && window.MEMOCRAFT_CONFIG.key));
+        gate.classList.remove('hidden');
+        app.classList.add('hidden');
+        app.classList.remove('flex');
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function unlockAppWorkspace() {
+        const gate = document.getElementById('auth-gate');
+        const app = document.getElementById('app');
+        gate.classList.add('hidden');
+        app.classList.remove('hidden');
+        app.classList.add('flex');
+        renderAll();
+      }
+
+      async function handleGateSubmit() {
+        const name = document.getElementById('gate-name').value.trim();
+        const studentId = document.getElementById('gate-student-id').value.trim();
+        const url = document.getElementById('gate-url').value.trim().replace(/\/rest\/v1\/?$/i, '');
+        const key = document.getElementById('gate-key').value.trim();
+
+        if (!name || !studentId) {
+          setGateFeedback('이름과 학번을 모두 입력해 주세요.', true);
           return;
         }
-        if (!/^https:\/\//i.test(url)) {
-          if (!isAuto) setSyncFeedback('Supabase Project URL은 https:// 로 시작해야 합니다.', true);
+        const consented = document.getElementById('gate-consent')?.checked;
+        if (!consented) {
+          setGateFeedback('이름·학번 개인정보 제공 동의 항목에 체크해 주세요.', true);
           return;
         }
 
+        sbConfig.name = name;
+        sbConfig.studentId = studentId;
+        sbConfig.nickname = `${name} (${studentId})`;
+        sbConfig.loggedIn = true;
+        if (url) sbConfig.url = url;
+        if (key) sbConfig.key = key;
+        CURRENT_USER = sbConfig.nickname;
+        saveSyncConfig();
+
+        // Update member display name in default group
+        state.groups.forEach(g => {
+          if (g.members && g.members.length && g.members[0].role === '방장') {
+            g.members[0].name = CURRENT_USER;
+          }
+        });
+        saveState();
+
+        // Register member & check block status on Supabase
+        if (sbConfig.url && sbConfig.key) {
+          const chk = await registerAndWatchMember(name, studentId);
+          if (chk.blocked) {
+            sbConfig.loggedIn = false;
+            saveSyncConfig();
+            setGateFeedback('접속이 제한된 계정입니다. 관리자에게 문의해 주세요.', true);
+            return;
+          }
+          try { await connectSupabase(true); } catch (e) {}
+        }
+
+        unlockAppWorkspace();
+        showToast(`${name} (${studentId})님, 환영합니다! 다음부터 자동 로그인됩니다.`, 'success');
+      }
+
+      async function handleAuthLogout() {
+        if (sbChannel && sbClient) {
+          try { await sbClient.removeChannel(sbChannel); } catch (e) {}
+          sbChannel = null;
+        }
+        if (sbClient) {
+          try { await sbClient.auth.signOut(); } catch (e) {}
+        }
+        sbUser = null;
+        sbConfig.loggedIn = false;
+        saveSyncConfig();
+        updateSyncIndicator(false);
+        const modal = document.getElementById('modal-sync');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        showAuthGate();
+        showToast('로그아웃되었습니다.');
+      }
+
+      async function connectSupabase(isAuto) {
+        const room = sbConfig.room.trim();
+        if (!room) {
+          if (!isAuto) setSyncFeedback('스터디 방 코드를 입력해 주세요.', true);
+          return;
+        }
         try {
-          if (sbChannel && sbClient) {
-            await sbClient.removeChannel(sbChannel);
+          const client = ensureSupabaseClient();
+          const { data: sessData } = await client.auth.getSession();
+          if (sessData?.session?.user) {
+            sbUser = sessData.session.user;
+            if (sbUser.user_metadata?.nickname) {
+              sbConfig.nickname = sbUser.user_metadata.nickname;
+              CURRENT_USER = sbConfig.nickname;
+            }
+          }
+
+          if (sbChannel) {
+            await client.removeChannel(sbChannel);
             sbChannel = null;
           }
-          sbClient = window.supabase.createClient(url, key);
 
-          // Initial fetch of room cards
-          const { data, error } = await sbClient
+          const activeGrp = ensureGroupForRoomCode(room, sbConfig.invitedGroupName || null);
+          ui.activeGroupId = activeGrp.id;
+          sbConfig.invitedGroupName = '';
+
+          const { data, error } = await client
             .from('mc_cards')
             .select('*')
             .eq('room_code', room)
             .order('updated_at', { ascending: false });
 
           if (error) throw error;
-
           (data || []).forEach(row => applyRemoteRowToLocal(row, false));
 
-          // Subscribe to Realtime INSERT / UPDATE / DELETE on mc_cards for this room
-          sbChannel = sbClient
+          // Load personal cross-device SRS progress if logged in!
+          const syncedProgressCount = await loadUserProgressFromCloud();
+
+          sbChannel = client
             .channel('mc_room_' + room)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'mc_cards', filter: `room_code=eq.${room}` }, payload => {
               if (payload.eventType === 'DELETE') {
@@ -3473,16 +3945,17 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           sbConfig.autoConnect = true;
           saveSyncConfig();
           saveState();
-          updateSyncIndicator(true, `실시간 · ${room}`);
+          updateSyncIndicator(true);
           renderAll();
           if (!isAuto) {
-            setSyncFeedback(`연결 완료! 방 "${room}"에서 ${data ? data.length : 0}장의 공유 카드를 불러왔고, 이제 수정 사항이 실시간 반영됩니다.`, false);
-            showToast(`Supabase 실시간 방 "${room}"에 연결되었습니다!`, 'success');
+            const progMsg = sbUser ? ` (개인 복습 기록 ${syncedProgressCount}건 기기 동기화 완료)` : ' (로그인하면 기기 간 개인 복습 기록도 동기화됩니다)';
+            setSyncFeedback(`연결 완료! 방 "${room}" 공유 카드 ${data ? data.length : 0}장 로드됨${progMsg}`, false);
+            showToast(`실시간 방 "${room}"에 연결되었습니다!`, 'success');
           }
         } catch (err) {
           updateSyncIndicator(false);
           if (!isAuto) {
-            setSyncFeedback('연결 실패: ' + (err.message || 'URL/Key 또는 테이블 생성 SQL을 확인해 주세요.'), true);
+            setSyncFeedback('연결 실패: ' + (err.message || 'URL/Key 또는 SQL 권한을 확인해 주세요.'), true);
           }
         }
       }
@@ -3492,7 +3965,6 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           try { await sbClient.removeChannel(sbChannel); } catch (e) {}
         }
         sbChannel = null;
-        sbClient = null;
         sbConfig.autoConnect = false;
         saveSyncConfig();
         updateSyncIndicator(false);
@@ -3510,6 +3982,338 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         if (window.lucide) lucide.createIcons();
+      }
+
+      // ================= MEMBER TRACKING, REAL-TIME BLOCK & ADMIN DASHBOARD =================
+      let sbMemberChannel = null;
+      let adminUnlocked = false;
+      let adminData = { members: [], cards: [], feedbacks: [], loaded: false };
+
+      async function registerAndWatchMember(name, studentId) {
+        if (!sbConfig.url || !sbConfig.key || !studentId) return { blocked: false };
+        try {
+          const client = ensureSupabaseClient();
+          const { data: existing, error: selErr } = await client
+            .from('mc_members')
+            .select('*')
+            .eq('student_id', studentId)
+            .maybeSingle();
+
+          if (selErr) return { blocked: false }; // table may not be set up yet -> fail open gracefully
+
+          if (existing && existing.status === 'blocked') {
+            return { blocked: true };
+          }
+
+          await client.from('mc_members').upsert({
+            student_id: studentId,
+            name: name,
+            status: existing?.status || 'active',
+            last_room: sbConfig.room || 'MC-STUDY-2026',
+            last_seen: new Date().toISOString()
+          }, { onConflict: 'student_id' });
+
+          // Watch this member's status in real time so Admin can kick & block instantly!
+          if (sbMemberChannel) {
+            try { await client.removeChannel(sbMemberChannel); } catch (e) {}
+          }
+          sbMemberChannel = client
+            .channel('mc_member_watch_' + studentId)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'mc_members', filter: `student_id=eq.${studentId}` }, payload => {
+              if (payload.new && payload.new.status === 'blocked') {
+                sbConfig.loggedIn = false;
+                saveSyncConfig();
+                showAuthGate();
+                setGateFeedback('관리자에 의해 접속이 차단되었습니다.', true);
+                showToast('접속이 차단되어 로그아웃되었습니다.', 'error');
+              }
+            })
+            .subscribe();
+
+          return { blocked: false };
+        } catch (e) {
+          return { blocked: false };
+        }
+      }
+
+      async function fetchAdminDashboardData() {
+        const banner = document.getElementById('admin-status-banner');
+        if (!sbConfig.url || !sbConfig.key) {
+          banner.classList.remove('hidden');
+          banner.className = 'p-3.5 rounded-2xl text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800';
+          banner.textContent = 'Supabase 서버 키가 연결되지 않아 로컬 카드만 표시됩니다. 상단 실시간 동기화에서 서버를 연결해 주세요.';
+          adminData = {
+            members: sbConfig.studentId ? [{ student_id: sbConfig.studentId, name: sbConfig.name, status: 'active', last_room: sbConfig.room, last_seen: new Date().toISOString() }] : [],
+            cards: state.cards.map(c => cardToSupabaseRow(c)),
+            loaded: true
+          };
+          renderAdminView();
+          return;
+        }
+
+        try {
+          const client = ensureSupabaseClient();
+          const [mRes, cRes, fRes] = await Promise.all([
+            client.from('mc_members').select('*').order('last_seen', { ascending: false }),
+            client.from('mc_cards').select('*').order('updated_at', { ascending: false }),
+            client.from('mc_feedback').select('*').order('created_at', { ascending: false })
+          ]);
+
+          if (mRes.error) {
+            banner.classList.remove('hidden');
+            banner.className = 'p-3.5 rounded-2xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+            banner.textContent = '접속 인원 테이블(mc_members) 조회 오류: ' + mRes.error.message;
+          } else {
+            banner.classList.add('hidden');
+          }
+
+          adminData = {
+            members: mRes.data || [],
+            cards: cRes.data || [],
+            feedbacks: fRes.data || [],
+            loaded: true
+          };
+          renderAdminView();
+        } catch (err) {
+          banner.classList.remove('hidden');
+          banner.className = 'p-3.5 rounded-2xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200';
+          banner.textContent = '관리자 데이터 로드 실패: ' + (err.message || '');
+        }
+      }
+
+      function formatShortTime(isoStr) {
+        if (!isoStr) return '-';
+        try {
+          const d = new Date(isoStr);
+          return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        } catch (e) { return '-'; }
+      }
+
+      function renderAdminView() {
+        const uQuery = (document.getElementById('admin-user-search')?.value || '').trim().toLowerCase();
+        const dQuery = (document.getElementById('admin-deck-search')?.value || '').trim().toLowerCase();
+
+        const members = adminData.members || [];
+        const cards = adminData.cards || [];
+        const blockedCount = members.filter(m => m.status === 'blocked').length;
+        const uniqueRooms = new Set(cards.map(c => c.room_code).filter(Boolean));
+
+        document.getElementById('admin-stat-users').textContent = `${members.length}명`;
+        document.getElementById('admin-stat-blocked').textContent = `${blockedCount}명`;
+        document.getElementById('admin-stat-rooms').textContent = `${uniqueRooms.size}개`;
+        document.getElementById('admin-stat-cards').textContent = `${cards.length}장`;
+
+        // Render Members Table
+        const filteredMembers = members.filter(m => !uQuery || `${m.name} ${m.student_id} ${m.last_room}`.toLowerCase().includes(uQuery));
+        const tbody = document.getElementById('admin-users-tbody');
+        if (!filteredMembers.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">접속 기록이 없습니다.</td></tr>';
+        } else {
+          tbody.innerHTML = filteredMembers.map(m => {
+            const isBlocked = m.status === 'blocked';
+            const isMe = m.student_id === sbConfig.studentId;
+            return `
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                <td class="py-2.5 pr-3 font-bold text-slate-900 dark:text-white">${escapeHtml(m.name)} ${isMe ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 ml-1">나</span>' : ''}</td>
+                <td class="py-2.5 pr-3 font-mono text-slate-600 dark:text-slate-300">${escapeHtml(m.student_id)}</td>
+                <td class="py-2.5 pr-3 font-mono text-[11px] text-slate-500">${escapeHtml(m.last_room || '-')}</td>
+                <td class="py-2.5 pr-3 text-slate-500">${formatShortTime(m.last_seen)}</td>
+                <td class="py-2.5 pr-3">
+                  ${isBlocked
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">차단됨</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">정상</span>'}
+                </td>
+                <td class="py-2.5 text-right whitespace-nowrap">
+                  ${isMe ? '<span class="text-[11px] text-slate-400">관리자</span>' : (
+                    isBlocked
+                      ? `<button type="button" data-admin-unblock="${escapeHtml(m.student_id)}" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] transition">차단 해제</button>`
+                      : `<button type="button" data-admin-block="${escapeHtml(m.student_id)}" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition">즉시 차단</button>`
+                  )}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        // Group All Cards by Room -> Subject -> Professor -> Chapter
+        const deckMap = new Map();
+        cards.forEach(c => {
+          const key = `${c.room_code || '기본'}||${c.subject_name || '미분류'}||${c.prof_name || '담당 교수'}||${c.chapter_name || '1장'}`;
+          if (!deckMap.has(key)) {
+            deckMap.set(key, {
+              key,
+              room: c.room_code || '기본',
+              subject: c.subject_name || '미분류',
+              prof: c.prof_name || '담당 교수',
+              chapter: c.chapter_name || '1장',
+              authors: new Set(),
+              cards: [],
+              latestAt: c.updated_at || ''
+            });
+          }
+          const entry = deckMap.get(key);
+          entry.cards.push(c);
+          if (c.author) entry.authors.add(c.author);
+          if (c.updated_by) entry.authors.add(c.updated_by);
+          if (c.updated_at && c.updated_at > entry.latestAt) entry.latestAt = c.updated_at;
+        });
+
+        const decks = Array.from(deckMap.values()).filter(d => {
+          if (!dQuery) return true;
+          const hay = `${d.room} ${d.subject} ${d.prof} ${d.chapter} ${Array.from(d.authors).join(' ')}`.toLowerCase();
+          return hay.includes(dQuery);
+        });
+
+        const decksEl = document.getElementById('admin-decks-list');
+        if (!decks.length) {
+          decksEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">서버에 등록된 덱이 없습니다.</div>';
+        } else {
+          decksEl.innerHTML = decks.map((d, idx) => `
+            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono font-bold">${escapeHtml(d.room)}</span>
+                    <span class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(d.subject)}</span>
+                    <span class="text-slate-400">›</span>
+                    <span class="font-semibold text-slate-600 dark:text-slate-300">${escapeHtml(d.prof)}</span>
+                    <span class="text-slate-400">›</span>
+                    <span class="text-slate-600 dark:text-slate-300">${escapeHtml(d.chapter)}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    카드 <strong>${d.cards.length}장</strong> · 참여자: ${escapeHtml(Array.from(d.authors).join(', ') || '-')} · 최근 수정 ${formatShortTime(d.latestAt)}
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-admin-toggle-deck="deck-prev-${idx}" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold hover:bg-slate-100 transition">카드 보기</button>
+                  <button type="button" data-admin-del-deck="${escapeHtml(d.key)}" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition">덱 삭제</button>
+                </div>
+              </div>
+              <div id="deck-prev-${idx}" class="hidden pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5 max-h-56 overflow-y-auto custom-scroll">
+                ${d.cards.slice(0, 20).map(c => `
+                  <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs">
+                    <div class="font-bold text-slate-800 dark:text-slate-100 line-clamp-1">${escapeHtml(String(c.front || '').replace(/^__HTML__/, '').replace(/<[^>]+>/g, ' '))}</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5 flex items-center justify-between">
+                      <span class="truncate max-w-[75%]">${escapeHtml(String(c.back || '').replace(/^__HTML__/, '').replace(/<[^>]+>/g, ' '))}</span>
+                      <span class="shrink-0 text-[10px] text-indigo-500">${escapeHtml(c.updated_by || c.author || '')}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+        const feedbacks = adminData.feedbacks || [];
+        const fbCountEl = document.getElementById('admin-feedback-count');
+        const fbListEl = document.getElementById('admin-feedback-list');
+        if (fbCountEl) fbCountEl.textContent = `${feedbacks.length}건`;
+        if (fbListEl) {
+          if (!feedbacks.length) {
+            fbListEl.innerHTML = '<div class="py-6 text-center text-xs text-slate-400">접수된 익명 제보가 아직 없습니다.</div>';
+          } else {
+            fbListEl.innerHTML = feedbacks.map(fb => {
+              const isDone = fb.status === 'done';
+              return `
+                <div class="p-3 rounded-2xl border ${isDone ? 'border-slate-200 dark:border-slate-800 opacity-65' : 'border-amber-200 dark:border-amber-800/70 bg-amber-50/40 dark:bg-amber-950/20'} flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center gap-1.5 text-[11px]">
+                      <span class="px-2 py-0.5 rounded-md font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">${escapeHtml(fb.category || '기타')}</span>
+                      <span class="text-slate-400">${formatShortTime(fb.created_at)}</span>
+                      ${isDone ? '<span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold">처리됨</span>' : ''}
+                    </div>
+                    <p class="text-xs text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed">${escapeHtml(fb.content)}</p>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    ${!isDone ? `<button type="button" data-fb-done="${escapeHtml(fb.id)}" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold">처리 완료</button>` : ''}
+                    <button type="button" data-fb-del="${escapeHtml(fb.id)}" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold">삭제</button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      async function submitAnonymousFeedback() {
+        const category = document.getElementById('fb-category').value;
+        const content = document.getElementById('fb-content').value.trim();
+        if (!content) { showToast('제보 내용을 입력해 주세요.', 'error'); return; }
+
+        const item = {
+          id: uid('fb'),
+          category,
+          content,
+          status: 'open',
+          created_at: new Date().toISOString()
+        };
+
+        try {
+          if (sbConfig.url && sbConfig.key) {
+            const client = ensureSupabaseClient();
+            const { error } = await client.from('mc_feedback').insert(item);
+            if (error) throw error;
+          } else {
+            adminData.feedbacks = [item, ...(adminData.feedbacks || [])];
+          }
+          document.getElementById('fb-content').value = '';
+          const m = document.getElementById('modal-feedback');
+          m.classList.add('hidden'); m.classList.remove('flex');
+          showToast('익명으로 제보가 전송되었습니다. 감사합니다!', 'success');
+        } catch (err) {
+          showToast('제보 전송 실패: ' + (err.message || '잠시 후 다시 시도해 주세요.'), 'error');
+        }
+      }
+
+      async function updateAdminFeedback(fbId, action) {
+        try {
+          if (sbConfig.url && sbConfig.key) {
+            const client = ensureSupabaseClient();
+            if (action === 'done') {
+              await client.from('mc_feedback').update({ status: 'done' }).eq('id', fbId);
+            } else {
+              await client.from('mc_feedback').delete().eq('id', fbId);
+            }
+          }
+          showToast(action === 'done' ? '제보를 처리 완료 표시했습니다.' : '제보를 삭제했습니다.');
+          await fetchAdminDashboardData();
+        } catch (err) {
+          showToast('처리 실패: ' + err.message, 'error');
+        }
+      }
+
+      async function setAdminMemberStatus(studentId, newStatus) {
+        if (!sbConfig.url || !sbConfig.key) return;
+        try {
+          const client = ensureSupabaseClient();
+          const { error } = await client.from('mc_members').update({ status: newStatus }).eq('student_id', studentId);
+          if (error) throw error;
+          showToast(newStatus === 'blocked' ? `학번 ${studentId} 사용자를 즉시 차단했습니다.` : `학번 ${studentId} 차단을 해제했습니다.`, 'success');
+          await fetchAdminDashboardData();
+        } catch (err) {
+          showToast('상태 변경 실패: ' + err.message, 'error');
+        }
+      }
+
+      async function deleteAdminDeckByKey(key) {
+        const [room, subject, prof, chapter] = key.split('||');
+        const targetIds = adminData.cards
+          .filter(c => (c.room_code || '기본') === room && (c.subject_name || '미분류') === subject && (c.prof_name || '담당 교수') === prof && (c.chapter_name || '1장') === chapter)
+          .map(c => c.id);
+        if (!targetIds.length) return;
+        try {
+          if (sbConfig.url && sbConfig.key) {
+            const client = ensureSupabaseClient();
+            const { error } = await client.from('mc_cards').delete().in('id', targetIds);
+            if (error) throw error;
+          }
+          state.cards = state.cards.filter(c => !targetIds.includes(c.id));
+          saveState();
+          showToast(`"${chapter}" 덱(${targetIds.length}장)을 서버에서 삭제했습니다.`);
+          await fetchAdminDashboardData();
+        } catch (err) {
+          showToast('덱 삭제 실패: ' + err.message, 'error');
+        }
       }
 
       // ================= EVENT LISTENERS =================
@@ -3535,6 +4339,87 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           });
         });
 
+        // Admin Page & PIN Modal
+        document.getElementById('btn-open-admin').addEventListener('click', () => {
+          if (adminUnlocked) {
+            ui.activeTab = 'admin';
+            renderAll();
+            fetchAdminDashboardData();
+            return;
+          }
+          document.getElementById('admin-pin-input').value = '';
+          document.getElementById('admin-pin-err').classList.add('hidden');
+          const m = document.getElementById('modal-admin-pin');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          setTimeout(() => document.getElementById('admin-pin-input').focus(), 40);
+        });
+        document.getElementById('btn-admin-pin-close').addEventListener('click', () => {
+          const m = document.getElementById('modal-admin-pin');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        const verifyAdminPin = () => {
+          const pin = document.getElementById('admin-pin-input').value.trim();
+          const expected = (window.MEMOCRAFT_CONFIG && window.MEMOCRAFT_CONFIG.adminPin) ? String(window.MEMOCRAFT_CONFIG.adminPin) : '2026';
+          if (pin === expected) {
+            adminUnlocked = true;
+            const m = document.getElementById('modal-admin-pin');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            ui.activeTab = 'admin';
+            renderAll();
+            fetchAdminDashboardData();
+          } else {
+            document.getElementById('admin-pin-err').classList.remove('hidden');
+          }
+        };
+        document.getElementById('btn-admin-pin-submit').addEventListener('click', verifyAdminPin);
+        document.getElementById('admin-pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') verifyAdminPin(); });
+        document.getElementById('btn-admin-refresh').addEventListener('click', fetchAdminDashboardData);
+        document.getElementById('btn-admin-lock').addEventListener('click', () => {
+          adminUnlocked = false;
+          ui.activeTab = 'library';
+          renderAll();
+          showToast('관리자 페이지가 잠겼습니다.');
+        });
+        document.getElementById('admin-user-search').addEventListener('input', renderAdminView);
+        document.getElementById('admin-deck-search').addEventListener('input', renderAdminView);
+        document.getElementById('admin-users-tbody').addEventListener('click', e => {
+          const blk = e.target.closest('[data-admin-block]');
+          if (blk) { setAdminMemberStatus(blk.dataset.adminBlock, 'blocked'); return; }
+          const unblk = e.target.closest('[data-admin-unblock]');
+          if (unblk) { setAdminMemberStatus(unblk.dataset.adminUnblock, 'active'); }
+        });
+        document.getElementById('admin-decks-list').addEventListener('click', e => {
+          const tog = e.target.closest('[data-admin-toggle-deck]');
+          if (tog) {
+            const el = document.getElementById(tog.dataset.adminToggleDeck);
+            if (el) el.classList.toggle('hidden');
+            return;
+          }
+          const del = e.target.closest('[data-admin-del-deck]');
+          if (del) { deleteAdminDeckByKey(del.dataset.adminDelDeck); }
+        });
+        document.getElementById('admin-feedback-list').addEventListener('click', e => {
+          const doneBtn = e.target.closest('[data-fb-done]');
+          if (doneBtn) { updateAdminFeedback(doneBtn.dataset.fbDone, 'done'); return; }
+          const delBtn = e.target.closest('[data-fb-del]');
+          if (delBtn) { updateAdminFeedback(delBtn.dataset.fbDel, 'delete'); }
+        });
+        document.getElementById('btn-open-feedback').addEventListener('click', () => {
+          const m = document.getElementById('modal-feedback');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          setTimeout(() => document.getElementById('fb-content').focus(), 40);
+          if (window.lucide) lucide.createIcons();
+        });
+        document.getElementById('btn-close-feedback').addEventListener('click', () => {
+          const m = document.getElementById('modal-feedback');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-fb-cancel').addEventListener('click', () => {
+          const m = document.getElementById('modal-feedback');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-fb-submit').addEventListener('click', submitAnonymousFeedback);
+
         // Theme toggle
         document.getElementById('btn-toggle-theme').addEventListener('click', () => {
           state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -3549,14 +4434,14 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           const m = document.getElementById('modal-sync');
           m.classList.add('hidden'); m.classList.remove('flex');
         });
-        document.getElementById('btn-sync-connect').addEventListener('click', () => {
-          sbConfig.nickname = document.getElementById('sync-nickname').value.trim() || '나 (본인)';
-          sbConfig.room = document.getElementById('sync-room').value.trim() || 'PHYSIO-2026';
-          sbConfig.url = document.getElementById('sync-url').value.trim();
-          sbConfig.key = document.getElementById('sync-key').value.trim();
-          CURRENT_USER = sbConfig.nickname;
-          saveSyncConfig();
-          connectSupabase(false);
+        document.getElementById('btn-gate-toggle-server').addEventListener('click', () => {
+          document.getElementById('gate-server-fields').classList.toggle('hidden');
+        });
+        document.getElementById('btn-gate-submit').addEventListener('click', handleGateSubmit);
+        ['gate-name', 'gate-student-id'].forEach(id => {
+          document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') handleGateSubmit();
+          });
         });
         document.getElementById('btn-sync-push-all').addEventListener('click', async () => {
           if (!sbConnected) return;
@@ -3564,8 +4449,26 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           showToast(`현재 보유한 ${state.cards.length}장의 카드를 실시간 방에 업로드했습니다!`, 'success');
         });
         document.getElementById('btn-sync-disconnect').addEventListener('click', disconnectSupabase);
+        document.getElementById('btn-sync-connect-now').addEventListener('click', () => {
+          sbConfig.nickname = document.getElementById('sync-nickname').value.trim() || sbConfig.nickname || '스터디원';
+          sbConfig.room = document.getElementById('sync-room').value.trim() || 'MC-STUDY-2026';
+          sbConfig.url = document.getElementById('sync-url').value.trim().replace(/\/rest\/v1\/?$/i, '');
+          sbConfig.key = document.getElementById('sync-key').value.trim();
+          CURRENT_USER = sbConfig.nickname;
+          saveSyncConfig();
+          connectSupabase(false);
+        });
+        document.getElementById('btn-auth-logout').addEventListener('click', handleAuthLogout);
+        document.getElementById('btn-copy-sync-invite').addEventListener('click', () => {
+          const base = window.location.origin + window.location.pathname;
+          const u = encodeURIComponent(sbConfig.url.trim());
+          const k = encodeURIComponent(sbConfig.key.trim());
+          const r = encodeURIComponent(sbConfig.room.trim());
+          const link = `${base}?url=${u}&key=${k}&room=${r}`;
+          copyToClipboard(link, '팀원 원클릭 초대 링크가 복사되었습니다! 카톡방에 공유하세요.');
+        });
         document.getElementById('btn-copy-sql').addEventListener('click', () => {
-          copyToClipboard(document.getElementById('sync-sql-code').textContent, 'Supabase 테이블 생성 SQL이 복사되었습니다!');
+          copyToClipboard(document.getElementById('sync-sql-code').textContent, '개인 진도 동기화 SQL이 복사되었습니다!');
         });
         document.getElementById('btn-open-apkg-top').addEventListener('click', openShareIoModal);
         document.getElementById('btn-open-share-io').addEventListener('click', openShareIoModal);
@@ -3585,7 +4488,71 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         });
 
         // Hierarchy tree delegation
-        document.getElementById('taxonomy-tree').addEventListener('click', e => {
+        const treeEl = document.getElementById('taxonomy-tree');
+        // Long-press (450ms) for iPad/Mobile & desktop hold
+        const startLP = (e) => {
+          if (e.target.closest('[data-toggle-sub], [data-toggle-prof]')) return;
+          const row = e.target.closest('[data-lp-type]');
+          if (!row) return;
+          longPressTriggered = false;
+          if (longPressTimer) clearTimeout(longPressTimer);
+          longPressTimer = setTimeout(() => {
+            longPressTriggered = true;
+            openTreeContextMenu(row.dataset.lpType, row.dataset.lpId);
+          }, 450);
+        };
+        const cancelLP = () => {
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        };
+        treeEl.addEventListener('pointerdown', startLP);
+        treeEl.addEventListener('pointerup', cancelLP);
+        treeEl.addEventListener('pointercancel', cancelLP);
+        treeEl.addEventListener('pointermove', cancelLP);
+        treeEl.addEventListener('contextmenu', e => {
+          const row = e.target.closest('[data-lp-type]');
+          if (!row) return;
+          e.preventDefault();
+          cancelLP();
+          openTreeContextMenu(row.dataset.lpType, row.dataset.lpId);
+        });
+
+        document.getElementById('btn-tree-menu-close').addEventListener('click', closeTreeContextMenu);
+        document.getElementById('modal-tree-menu').addEventListener('click', e => {
+          if (e.target.id === 'modal-tree-menu') closeTreeContextMenu();
+        });
+        document.getElementById('btn-tree-del-cancel').addEventListener('click', () => {
+          document.getElementById('tree-menu-del-confirm').classList.add('hidden');
+        });
+        document.getElementById('btn-tree-del-ok').addEventListener('click', executeTreeDeckDelete);
+        document.getElementById('tree-menu-actions').addEventListener('click', e => {
+          const btn = e.target.closest('[data-tm-act]');
+          if (!btn || !activeTreeMenu) return;
+          const act = btn.dataset.tmAct;
+          const m = { ...activeTreeMenu };
+          if (act === 'delete') {
+            document.getElementById('tree-menu-del-msg').textContent =
+              `"${m.name}" 덱과 안에 들어 있는 카드 ${m.cardCount}장을 정말 삭제할까요?`;
+            document.getElementById('tree-menu-del-confirm').classList.remove('hidden');
+            return;
+          }
+          closeTreeContextMenu();
+          if (act === 'add-prof') {
+            openTaxActionModal({ mode: 'add-prof', subId: m.subId, title: `"${m.name}"에 교수님 추가`, label: '교수님 성함', placeholder: '예: 이영환 교수' });
+          } else if (act === 'add-chap') {
+            openTaxActionModal({ mode: 'add-chap', subId: m.subId, profId: m.profId, title: `"${m.name}"에 단원 추가`, label: '새 단원명', placeholder: '예: 1장. 개요' });
+          } else if (act === 'rename') {
+            if (m.type === 'sub') openTaxActionModal({ mode: 'rename', target: 'sub', subId: m.subId, title: '과목 이름 바꾸기', label: '새 과목명', initialValue: m.name });
+            else if (m.type === 'prof') openTaxActionModal({ mode: 'rename', target: 'prof', subId: m.subId, profId: m.profId, title: '교수님 이름 바꾸기', label: '새 교수님 성함', initialValue: m.name });
+            else if (m.type === 'chap') openTaxActionModal({ mode: 'rename', target: 'chap', subId: m.subId, profId: m.profId, chapId: m.chapId, title: '단원 이름 바꾸기', label: '새 단원명', initialValue: m.name });
+          } else if (act === 'move') {
+            if (m.type === 'prof') openTaxActionModal({ mode: 'move-prof', subId: m.subId, profId: m.profId, title: '교수님 과목 이동', desc: `"${m.name}" 교수님과 소속 단원·카드를 다른 과목으로 이동합니다.` });
+            else if (m.type === 'chap') openTaxActionModal({ mode: 'move-chap', subId: m.subId, profId: m.profId, chapId: m.chapId, title: '단원 위치 이동', desc: `"${m.name}" 단원과 소속 카드를 다른 과목·교수님 아래로 이동합니다.` });
+          }
+        });
+
+        treeEl.addEventListener('click', e => {
+          if (longPressTriggered) { longPressTriggered = false; e.preventDefault(); return; }
+          if (e.target.closest('#btn-empty-add-sub')) { openTaxonomyModal(); return; }
           if (handleTaxonomyActionClick(e)) return;
           const tSub = e.target.closest('[data-toggle-sub]');
           if (tSub) {
@@ -3753,13 +4720,20 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           showToast('선택한 카드를 시험 필수(⭐)로 표시했습니다.', 'success');
         });
         document.getElementById('btn-bulk-share').addEventListener('click', () => {
-          const targetGroup = state.groups[0]?.id;
-          if (!targetGroup) return;
-          state.cards.forEach(c => { if (ui.selectedCardIds.has(c.id)) c.sharedGroupId = targetGroup; });
+          const grp = state.groups.find(g => g.id === ui.activeGroupId) || state.groups[0];
+          if (!grp) return;
+          const sharedCards = [];
+          state.cards.forEach(c => {
+            if (ui.selectedCardIds.has(c.id)) {
+              c.sharedGroupId = grp.id;
+              sharedCards.push(c);
+            }
+          });
           ui.selectedCardIds.clear();
           saveState();
+          if (sharedCards.length) syncUpsertCards(sharedCards);
           renderAll();
-          showToast(`선택한 카드를 "${state.groups[0].name}" 스터디에 공유했습니다.`, 'success');
+          showToast(`선택한 ${sharedCards.length}장의 카드를 "${grp.name}" 스터디에 실시간 공유했습니다.`, 'success');
         });
         document.getElementById('btn-bulk-delete').addEventListener('click', () => {
           const delIds = Array.from(ui.selectedCardIds);
@@ -4000,11 +4974,18 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           }
         });
 
-        // Study Group View Events
-        document.getElementById('group-switcher').addEventListener('change', e => {
+        // Study Group View Events (Multi-Group Real-Time Room Switching!)
+        document.getElementById('group-switcher').addEventListener('change', async e => {
           ui.activeGroupId = e.target.value;
           ui.sharedFilterChapter = 'all';
           ui.sharedFilterAuthor = 'all';
+          const grp = state.groups.find(g => g.id === ui.activeGroupId);
+          if (grp && sbConfig.url && sbConfig.key) {
+            sbConfig.room = grp.inviteCode;
+            saveSyncConfig();
+            await connectSupabase(true);
+            showToast(`"${grp.name}" 실시간 스터디 방으로 전환했습니다.`, 'success');
+          }
           renderStudyGroupView();
           if (window.lucide) lucide.createIcons();
         });
@@ -4020,7 +5001,42 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         });
         document.getElementById('btn-copy-invite').addEventListener('click', () => {
           const g = state.groups.find(x => x.id === ui.activeGroupId);
-          if (g) copyToClipboard(`[MemoCraft 스터디 초대] "${g.name}" 초대 코드: ${g.inviteCode}`, '스터디 초대 코드가 복사되었습니다!');
+          if (!g) return;
+          if (sbConfig.url && sbConfig.key) {
+            const base = window.location.origin + window.location.pathname;
+            const link = `${base}?url=${encodeURIComponent(sbConfig.url.trim())}&key=${encodeURIComponent(sbConfig.key.trim())}&room=${encodeURIComponent(g.inviteCode)}&gname=${encodeURIComponent(g.name)}`;
+            copyToClipboard(`[MemoCraft "${g.name}" 스터디 초대]\n초대 코드: ${g.inviteCode}\n바로 입장 링크: ${link}`, `"${g.name}" 초대 링크와 코드가 복사되었습니다!`);
+          } else {
+            copyToClipboard(`[MemoCraft 스터디 초대] "${g.name}" 초대 코드: ${g.inviteCode}`, '스터디 초대 코드가 복사되었습니다!');
+          }
+        });
+        document.getElementById('btn-join-group').addEventListener('click', () => {
+          document.getElementById('jg-code').value = '';
+          document.getElementById('jg-name').value = '';
+          const m = document.getElementById('modal-join-group');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          setTimeout(() => document.getElementById('jg-code').focus(), 40);
+        });
+        document.getElementById('btn-jg-cancel').addEventListener('click', () => {
+          const m = document.getElementById('modal-join-group');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-jg-join').addEventListener('click', async () => {
+          const code = document.getElementById('jg-code').value.trim().toUpperCase();
+          const name = document.getElementById('jg-name').value.trim();
+          if (!code) { showToast('초대 코드를 입력해 주세요.', 'error'); return; }
+          const grp = ensureGroupForRoomCode(code, name || `스터디 (${code})`);
+          ui.activeGroupId = grp.id;
+          sbConfig.room = grp.inviteCode;
+          saveSyncConfig();
+          saveState();
+          const m = document.getElementById('modal-join-group');
+          m.classList.add('hidden'); m.classList.remove('flex');
+          if (sbConfig.url && sbConfig.key) {
+            await connectSupabase(true);
+          }
+          renderAll();
+          showToast(`"${grp.name}" 스터디에 참여했습니다!`, 'success');
         });
         document.getElementById('btn-create-group').addEventListener('click', () => {
           const m = document.getElementById('modal-new-group');
@@ -4043,13 +5059,18 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
           };
           state.groups.push(ng);
           ui.activeGroupId = ng.id;
+          sbConfig.room = ng.inviteCode;
+          saveSyncConfig();
           document.getElementById('ng-name').value = '';
           document.getElementById('ng-desc').value = '';
           const m = document.getElementById('modal-new-group');
           m.classList.add('hidden'); m.classList.remove('flex');
           saveState();
+          if (sbConfig.url && sbConfig.key) {
+            connectSupabase(true);
+          }
           renderAll();
-          showToast(`"${name}" 스터디가 생성되었습니다!`, 'success');
+          showToast(`"${name}" 스터디(${ng.inviteCode})가 생성되어 실시간 방으로 연결되었습니다!`, 'success');
         });
 
         document.getElementById('shared-cards-list').addEventListener('click', e => {
@@ -4233,14 +5254,34 @@ alter publication supabase_realtime add table public.mc_cards;</pre>
         });
       }
 
-      // Boot
-      bindEvents();
-      buildStudyQueue('due');
-      renderAll();
-      startRealTimeSrsScheduler();
-      if (sbConfig.autoConnect && sbConfig.url && sbConfig.key && sbConfig.room) {
-        connectSupabase(true);
+      // Boot with Name + Student ID Auto-Login
+      async function bootApp() {
+        applyTheme();
+        bindEvents();
+        buildStudyQueue('due');
+        startRealTimeSrsScheduler();
+
+        if (sbConfig.loggedIn && sbConfig.name && sbConfig.studentId) {
+          if (sbConfig.url && sbConfig.key) {
+            const chk = await registerAndWatchMember(sbConfig.name, sbConfig.studentId);
+            if (chk.blocked) {
+              sbConfig.loggedIn = false;
+              saveSyncConfig();
+              showAuthGate();
+              setGateFeedback('접속이 제한된 계정입니다. 관리자에게 문의해 주세요.', true);
+              return;
+            }
+          }
+          CURRENT_USER = `${sbConfig.name} (${sbConfig.studentId})`;
+          unlockAppWorkspace();
+          if (sbConfig.url && sbConfig.key) {
+            try { await connectSupabase(true); } catch (e) {}
+          }
+          return;
+        }
+        showAuthGate();
       }
+      bootApp();
     })();
   </script>
 </body>
