@@ -132,17 +132,10 @@
           인증 메일 보내기
         </button>
 
-        <div id="gate-otp-area" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-          <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-800 dark:text-indigo-200 leading-relaxed break-keep">
-            메일함으로 인증 메일을 보냈습니다. 메일 안의 <strong>로그인 링크를 누르거나</strong>, <strong>인증코드</strong>를 아래에 입력해 주세요.
+        <div id="gate-otp-area" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-800 dark:text-indigo-200 leading-relaxed break-keep">
+            메일함(스팸함 포함)으로 인증 메일을 보냈습니다. 메일 안의 <strong>로그인 링크를 누르면</strong> 자동으로 MemoCraft에 입장합니다.
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">인증코드 입력 (메일에 코드가 있는 경우)</label>
-            <input id="gate-otp" type="text" inputmode="numeric" maxlength="8" placeholder="6자리 숫자 입력" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          </div>
-          <button id="btn-gate-verify-otp" type="button" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-sm transition">
-            인증코드 확인하고 입장
-          </button>
           <button id="btn-gate-resend-otp" type="button" class="w-full py-1.5 text-[11px] font-bold text-slate-400 hover:text-indigo-500 transition">
             인증 메일 다시 보내기
           </button>
@@ -3560,7 +3553,7 @@
         const addProf = e.target.closest('[data-quick-add-prof]');
         if (addProf) {
           const sub = getSubject(addProf.dataset.quickAddProf);
-          if (sub) openTaxActionModal({ mode: 'add-prof', subId: sub.id, title: `"${sub.name}"에 교수님 추가`, label: '교수님 성함', placeholder: '예: 이영환 교수' });
+          if (sub) openTaxActionModal({ mode: 'add-prof', subId: sub.id, title: `"${sub.name}"에 교수님 추가`, label: '교수님 성함', placeholder: '예: 홍길동 교수' });
           return true;
         }
         const addChap = e.target.closest('[data-quick-add-chap]');
@@ -4254,12 +4247,17 @@
         return sbClient;
       }
 
-      function setGateFeedback(msg, isError) {
+      function setGateFeedback(msg, isErr) {
         const el = document.getElementById('gate-feedback');
         if (!el) return;
-        el.classList.remove('hidden');
-        el.className = `p-3 rounded-xl text-xs font-semibold ${isError ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'}`;
+        if (!msg) {
+          el.textContent = '';
+          el.classList.add('hidden');
+          return;
+        }
         el.textContent = msg;
+        el.className = `p-3 rounded-xl text-xs font-semibold ${isErr ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'}`;
+        el.classList.remove('hidden');
       }
 
       function showAuthGate() {
@@ -4385,7 +4383,7 @@
             return;
           }
           document.getElementById('gate-otp-area')?.classList.remove('hidden');
-          setGateFeedback(`${email}로 인증 메일을 보냈습니다! 메일함(스팸함 포함)을 확인해 주세요.`, false);
+          setGateFeedback('', false);
           let sec = 60;
           if (otpResendTimer) clearInterval(otpResendTimer);
           if (resendBtn) {
@@ -5334,7 +5332,7 @@
           }
           closeTreeContextMenu();
           if (act === 'add-prof') {
-            openTaxActionModal({ mode: 'add-prof', subId: m.subId, title: `"${m.name}"에 교수님 추가`, label: '교수님 성함', placeholder: '예: 이영환 교수' });
+            openTaxActionModal({ mode: 'add-prof', subId: m.subId, title: `"${m.name}"에 교수님 추가`, label: '교수님 성함', placeholder: '예: 홍길동 교수' });
           } else if (act === 'add-chap') {
             openTaxActionModal({ mode: 'add-chap', subId: m.subId, profId: m.profId, title: `"${m.name}"에 단원 추가`, label: '새 단원명', placeholder: '예: 1장. 개요' });
           } else if (act === 'rename') {
