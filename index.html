@@ -109,61 +109,66 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen antialiased selection:bg-indigo-200 dark:selection:bg-indigo-800">
-  <!-- EMAIL OTP / MAGIC LINK AUTH GATE (Verified Account + 8-Digit Student ID Binding) -->
+  <!-- STUDENT ID + PASSWORD AUTH GATE (Login / Sign Up) -->
   <div id="auth-gate" class="fixed inset-0 z-[55] bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5 my-auto animate-fade-up">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-4 my-auto animate-fade-up">
       <div class="text-center space-y-2">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md">
           <i data-lucide="layers" class="w-6 h-6"></i>
         </div>
         <div>
           <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">MemoCraft 시작하기</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-keep">이메일 본인 인증으로 계정을 안전하게 보호하고, 폰·아이패드·PC를 연동합니다.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-keep">8자리 학번과 비밀번호로 안전하게 로그인하고, 폰·아이패드·PC를 연동합니다.</p>
         </div>
       </div>
 
-      <!-- STEP 1: Email Verification (OTP Code or Magic Link) -->
-      <div id="gate-step-email" class="space-y-3">
+      <!-- Mode Switcher Tabs -->
+      <div class="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800">
+        <button id="btn-gate-tab-login" type="button" class="py-2 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition">로그인</button>
+        <button id="btn-gate-tab-signup" type="button" class="py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 transition">처음 가입</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="gate-form-login" class="space-y-3">
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">이메일 주소 <span class="text-rose-500">*</span></label>
-          <input id="gate-email" type="email" autocomplete="email" placeholder="예: student@gmail.com" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">학번 (8자리 숫자) <span class="text-rose-500">*</span></label>
+          <input id="gate-login-sid" type="text" inputmode="numeric" maxlength="8" placeholder="예: 20231234" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
-        <button id="btn-gate-send-otp" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition">
-          인증 메일 보내기
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">비밀번호 <span class="text-rose-500">*</span></label>
+          <input id="gate-login-pw" type="password" autocomplete="current-password" placeholder="비밀번호 입력" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button id="btn-gate-login" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition">
+          로그인 (자동 로그인)
         </button>
-
-        <div id="gate-otp-area" class="hidden pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-800 dark:text-indigo-200 leading-relaxed break-keep">
-            메일함(스팸함 포함)으로 인증 메일을 보냈습니다. 메일 안의 <strong>로그인 링크를 누르면</strong> 자동으로 MemoCraft에 입장합니다.
-          </div>
-          <button id="btn-gate-resend-otp" type="button" class="w-full py-1.5 text-[11px] font-bold text-slate-400 hover:text-indigo-500 transition">
-            인증 메일 다시 보내기
-          </button>
-        </div>
       </div>
 
-      <!-- STEP 2: First-Time Profile Binding (Name + 8-Digit Student ID) -->
-      <div id="gate-step-profile" class="hidden space-y-3">
-        <div id="gate-verified-email-badge" class="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 text-center"></div>
+      <!-- SIGNUP FORM -->
+      <div id="gate-form-signup" class="hidden space-y-2.5">
         <div>
           <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">이름 (실명) <span class="text-rose-500">*</span></label>
-          <input id="gate-name" type="text" placeholder="예: 박지훈" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input id="gate-name" type="text" placeholder="예: 박지훈" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">학번 (8자리 숫자) <span class="text-rose-500">*</span></label>
-          <input id="gate-student-id" type="text" inputmode="numeric" maxlength="8" placeholder="예: 20231234" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input id="gate-student-id" type="text" inputmode="numeric" maxlength="8" placeholder="예: 20231234" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">비밀번호 (6자 이상) <span class="text-rose-500">*</span></label>
+          <input id="gate-signup-pw" type="password" autocomplete="new-password" placeholder="6자 이상 설정" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">비밀번호 확인 <span class="text-rose-500">*</span></label>
+          <input id="gate-signup-pw2" type="password" autocomplete="new-password" placeholder="비밀번호 한 번 더 입력" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <label class="flex items-start gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer select-none">
           <input id="gate-consent" type="checkbox" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0" />
           <span class="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-            <strong class="text-indigo-600 dark:text-indigo-400">[필수]</strong> <strong>이름·학번·이메일 개인정보 제공 및 이용</strong>에 동의합니다.
+            <strong class="text-indigo-600 dark:text-indigo-400">[필수]</strong> <strong>이름·학번 개인정보 제공 및 이용</strong>에 동의합니다.
           </span>
         </label>
         <button id="btn-gate-submit" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition">
-          등록하고 시작하기
-        </button>
-        <button id="btn-gate-profile-logout" type="button" class="w-full py-1.5 text-[11px] font-bold text-slate-400 hover:text-rose-500 transition">
-          다른 이메일로 로그인하기
+          가입하고 시작하기
         </button>
       </div>
 
@@ -4285,29 +4290,41 @@
         renderAll();
       }
 
-      let otpResendTimer = null;
-
-      function showGateStep(step) {
-        const emailStep = document.getElementById('gate-step-email');
-        const profStep = document.getElementById('gate-step-profile');
-        if (emailStep) emailStep.classList.toggle('hidden', step !== 'email');
-        if (profStep) profStep.classList.toggle('hidden', step !== 'profile');
+      function showGateTab(mode) {
+        const isLogin = mode === 'login';
+        const loginForm = document.getElementById('gate-form-login');
+        const signupForm = document.getElementById('gate-form-signup');
+        const tLogin = document.getElementById('btn-gate-tab-login');
+        const tSignup = document.getElementById('btn-gate-tab-signup');
+        if (loginForm) loginForm.classList.toggle('hidden', !isLogin);
+        if (signupForm) signupForm.classList.toggle('hidden', isLogin);
+        if (tLogin) {
+          tLogin.className = isLogin
+            ? 'py-2 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition'
+            : 'py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 transition';
+        }
+        if (tSignup) {
+          tSignup.className = !isLogin
+            ? 'py-2 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition'
+            : 'py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 transition';
+        }
         setGateFeedback('', false);
       }
 
-      async function completeVerifiedUserLogin(user) {
+      function sidToInternalEmail(studentId) {
+        return `s${studentId.trim()}@memocraft.app`;
+      }
+
+      async function completeVerifiedUserLogin(user, fallbackName, fallbackSid) {
         if (!user) return;
         sbUser = user;
         const meta = user.user_metadata || {};
-        const name = (meta.name || '').trim();
-        const studentId = (meta.student_id || '').trim();
-
-        if (!name || !/^\d{8}$/.test(studentId)) {
-          // Verified email, but first time: ask for Name + 8-digit Student ID once
-          const badge = document.getElementById('gate-verified-email-badge');
-          if (badge) badge.textContent = `✓ ${user.email} 인증 완료 — 처음 1회만 이름·학번을 등록하세요`;
+        const name = (meta.name || fallbackName || '').trim();
+        const studentId = (meta.student_id || fallbackSid || '').trim();
+        if (!name || !studentId) {
           showAuthGate();
-          showGateStep('profile');
+          showGateTab('signup');
+          setGateFeedback('계정 정보를 불러오지 못했습니다. 다시 가입하거나 로그인해 주세요.', true);
           return;
         }
 
@@ -4327,7 +4344,7 @@
           sbConfig.loggedIn = false;
           saveSyncConfig();
           showAuthGate();
-          showGateStep('email');
+          showGateTab('login');
           setGateFeedback('접속이 제한된 계정입니다. 관리자에게 문의해 주세요.', true);
           return;
         }
@@ -4347,120 +4364,110 @@
         showToast(`${name} (${studentId})님 계정으로 로그인되었습니다!`, 'success');
       }
 
-      async function handleSendEmailOtp() {
-        const email = (document.getElementById('gate-email')?.value || '').trim().toLowerCase();
+      async function handleGateLogin() {
+        const studentId = (document.getElementById('gate-login-sid')?.value || '').trim();
+        const password = document.getElementById('gate-login-pw')?.value || '';
         const url = document.getElementById('gate-url')?.value.trim().replace(/\/rest\/v1\/?$/i, '');
         const key = document.getElementById('gate-key')?.value.trim();
         if (url) sbConfig.url = url;
         if (key) sbConfig.key = key;
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setGateFeedback('올바른 이메일 주소를 입력해 주세요.', true);
+
+        if (!/^\d{8}$/.test(studentId)) {
+          setGateFeedback('학번은 숫자 8자리로 입력해 주세요 (예: 20231234).', true);
+          return;
+        }
+        if (!password || password.length < 6) {
+          setGateFeedback('비밀번호(6자 이상)를 입력해 주세요.', true);
           return;
         }
         if (!sbConfig.url || !sbConfig.key) {
           setGateFeedback('서버 연결 설정이 비어 있습니다. 관리자에게 문의해 주세요.', true);
           return;
         }
-        const sendBtn = document.getElementById('btn-gate-send-otp');
-        const resendBtn = document.getElementById('btn-gate-resend-otp');
-        if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '인증 메일 전송 중...'; }
+
+        const btn = document.getElementById('btn-gate-login');
+        if (btn) { btn.disabled = true; btn.textContent = '로그인 중...'; }
         setGateFeedback('', false);
         try {
           const client = ensureSupabaseClient();
-          const redirectUrl = window.location.origin + window.location.pathname;
-          const { error } = await client.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: true,
-              emailRedirectTo: redirectUrl
-            }
+          const { data, error } = await client.auth.signInWithPassword({
+            email: sidToInternalEmail(studentId),
+            password
           });
-          if (error) {
-            const msg = error.message.includes('rate limit')
-              ? '잠시 후 다시 시도해 주세요 (이메일 발송 한도 초과).'
-              : '인증 메일 전송 실패: ' + error.message;
-            setGateFeedback(msg, true);
-            return;
-          }
-          document.getElementById('gate-otp-area')?.classList.remove('hidden');
-          setGateFeedback('', false);
-          let sec = 60;
-          if (otpResendTimer) clearInterval(otpResendTimer);
-          if (resendBtn) {
-            resendBtn.disabled = true;
-            resendBtn.textContent = `인증 메일 다시 보내기 (${sec}초)`;
-            otpResendTimer = setInterval(() => {
-              sec -= 1;
-              if (sec <= 0) {
-                clearInterval(otpResendTimer);
-                resendBtn.disabled = false;
-                resendBtn.textContent = '인증 메일 다시 보내기';
-              } else {
-                resendBtn.textContent = `인증 메일 다시 보내기 (${sec}초)`;
-              }
-            }, 1000);
-          }
-        } catch (e) {
-          setGateFeedback('네트워크 오류가 발생했습니다. 다시 시도해 주세요.', true);
-        } finally {
-          if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '인증 메일 보내기'; }
-        }
-      }
-
-      async function handleVerifyEmailOtp() {
-        const email = (document.getElementById('gate-email')?.value || '').trim().toLowerCase();
-        const token = (document.getElementById('gate-otp')?.value || '').trim();
-        if (!email) { setGateFeedback('이메일 주소를 먼저 입력해 주세요.', true); return; }
-        if (!token || token.length < 6) { setGateFeedback('메일로 받은 6자리 인증코드를 입력해 주세요.', true); return; }
-        const btn = document.getElementById('btn-gate-verify-otp');
-        if (btn) { btn.disabled = true; btn.textContent = '인증 확인 중...'; }
-        try {
-          const client = ensureSupabaseClient();
-          const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
           if (error || !data?.user) {
-            setGateFeedback('인증코드가 올바르지 않거나 만료되었습니다. 메일의 로그인 링크를 누르거나 다시 요청해 주세요.', true);
+            const msg = (error?.message || '').toLowerCase().includes('invalid')
+              ? '학번 또는 비밀번호가 올바르지 않습니다. 처음 사용하신다면 [처음 가입] 탭에서 가입해 주세요.'
+              : '로그인 실패: ' + (error?.message || '다시 시도해 주세요.');
+            setGateFeedback(msg, true);
             return;
           }
           await completeVerifiedUserLogin(data.user);
         } catch (e) {
-          setGateFeedback('인증 확인 중 오류가 발생했습니다.', true);
+          setGateFeedback('네트워크 오류가 발생했습니다. 다시 시도해 주세요.', true);
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '인증코드 확인하고 입장'; }
+          if (btn) { btn.disabled = false; btn.textContent = '로그인 (자동 로그인)'; }
         }
       }
 
       async function handleGateSubmit() {
-        const name = document.getElementById('gate-name').value.trim();
-        const studentId = document.getElementById('gate-student-id').value.trim();
-        if (!name) {
-          setGateFeedback('이름(실명)을 입력해 주세요.', true);
+        const name = (document.getElementById('gate-name')?.value || '').trim();
+        const studentId = (document.getElementById('gate-student-id')?.value || '').trim();
+        const pw = document.getElementById('gate-signup-pw')?.value || '';
+        const pw2 = document.getElementById('gate-signup-pw2')?.value || '';
+        const url = document.getElementById('gate-url')?.value.trim().replace(/\/rest\/v1\/?$/i, '');
+        const key = document.getElementById('gate-key')?.value.trim();
+        if (url) sbConfig.url = url;
+        if (key) sbConfig.key = key;
+
+        if (!name) { setGateFeedback('이름(실명)을 입력해 주세요.', true); return; }
+        if (!/^\d{8}$/.test(studentId)) { setGateFeedback('학번은 숫자 8자리로 정확히 입력해 주세요 (예: 20231234).', true); return; }
+        if (pw.length < 6) { setGateFeedback('비밀번호는 6자 이상으로 설정해 주세요.', true); return; }
+        if (pw !== pw2) { setGateFeedback('비밀번호 확인이 일치하지 않습니다.', true); return; }
+        if (!document.getElementById('gate-consent')?.checked) {
+          setGateFeedback('이름·학번 개인정보 제공 및 이용 동의 항목에 체크해 주세요.', true);
           return;
         }
-        if (!/^\d{8}$/.test(studentId)) {
-          setGateFeedback('학번은 숫자 8자리로 정확히 입력해 주세요 (예: 20231234).', true);
+        if (!sbConfig.url || !sbConfig.key) {
+          setGateFeedback('서버 연결 설정이 비어 있습니다. 관리자에게 문의해 주세요.', true);
           return;
         }
-        const consented = document.getElementById('gate-consent')?.checked;
-        if (!consented) {
-          setGateFeedback('개인정보 제공 및 이용 동의 항목에 체크해 주세요.', true);
-          return;
-        }
+
         const btn = document.getElementById('btn-gate-submit');
-        if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
+        if (btn) { btn.disabled = true; btn.textContent = '가입 처리 중...'; }
+        setGateFeedback('', false);
         try {
           const client = ensureSupabaseClient();
-          const { data, error } = await client.auth.updateUser({
-            data: { name, student_id: studentId }
+          const { data, error } = await client.auth.signUp({
+            email: sidToInternalEmail(studentId),
+            password: pw,
+            options: { data: { name, student_id: studentId } }
           });
-          if (error || !data?.user) {
-            setGateFeedback('프로필 등록 실패: ' + (error?.message || '다시 로그인해 주세요.'), true);
+          if (error) {
+            const msg = (error.message || '').toLowerCase().includes('already registered')
+              ? '이미 가입된 학번입니다. [로그인] 탭에서 비밀번호로 로그인해 주세요.'
+              : '가입 실패: ' + error.message;
+            setGateFeedback(msg, true);
             return;
           }
-          await completeVerifiedUserLogin(data.user);
+          if (data?.user && data?.session) {
+            await completeVerifiedUserLogin(data.user, name, studentId);
+          } else {
+            // Fallback immediate sign-in if session wasn't attached on signUp response
+            const { data: inData, error: inErr } = await client.auth.signInWithPassword({
+              email: sidToInternalEmail(studentId),
+              password: pw
+            });
+            if (inErr || !inData?.user) {
+              setGateFeedback('가입이 완료되었습니다. [로그인] 탭에서 학번과 비밀번호로 로그인해 주세요.', false);
+              showGateTab('login');
+              return;
+            }
+            await completeVerifiedUserLogin(inData.user, name, studentId);
+          }
         } catch (e) {
-          setGateFeedback('등록 중 오류가 발생했습니다.', true);
+          setGateFeedback('네트워크 오류가 발생했습니다. 다시 시도해 주세요.', true);
         } finally {
-          if (btn) { btn.disabled = false; btn.textContent = '등록하고 시작하기'; }
+          if (btn) { btn.disabled = false; btn.textContent = '가입하고 시작하기'; }
         }
       }
 
@@ -4492,8 +4499,8 @@
         sbConfig.email = '';
         sbConfig.name = '';
         sbConfig.studentId = '';
-        showGateStep('email');
-        document.getElementById('gate-otp-area')?.classList.add('hidden');
+        showGateTab('login');
+        
         sbConfig.nickname = '';
         sbConfig.room = '';
         CURRENT_USER = '나 (본인)';
@@ -5155,13 +5162,12 @@
         document.getElementById('btn-gate-toggle-server').addEventListener('click', () => {
           document.getElementById('gate-server-fields').classList.toggle('hidden');
         });
-        document.getElementById('btn-gate-submit').addEventListener('click', handleGateSubmit);
-        document.getElementById('btn-gate-send-otp')?.addEventListener('click', handleSendEmailOtp);
-        document.getElementById('btn-gate-resend-otp')?.addEventListener('click', handleSendEmailOtp);
-        document.getElementById('btn-gate-verify-otp')?.addEventListener('click', handleVerifyEmailOtp);
-        document.getElementById('btn-gate-profile-logout')?.addEventListener('click', handleAuthLogout);
-        document.getElementById('gate-email')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleSendEmailOtp(); });
-        document.getElementById('gate-otp')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleVerifyEmailOtp(); });
+        document.getElementById('btn-gate-tab-login')?.addEventListener('click', () => showGateTab('login'));
+        document.getElementById('btn-gate-tab-signup')?.addEventListener('click', () => showGateTab('signup'));
+        document.getElementById('btn-gate-login')?.addEventListener('click', handleGateLogin);
+        document.getElementById('btn-gate-submit')?.addEventListener('click', handleGateSubmit);
+        document.getElementById('gate-login-pw')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleGateLogin(); });
+        document.getElementById('gate-signup-pw2')?.addEventListener('keydown', e => { if (e.key === 'Enter') handleGateSubmit(); });
         ['gate-name', 'gate-student-id'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
             if (e.key === 'Enter') handleGateSubmit();
@@ -6550,7 +6556,7 @@
           } catch (e) {}
         }
         showAuthGate();
-        showGateStep('email');
+        showGateTab('login');
       }
       bootApp();
     })();
