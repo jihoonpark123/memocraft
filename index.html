@@ -591,10 +591,16 @@
               </div>
             </div>
 
-            <!-- Right: Shared Cards Feed -->
+            <!-- Right: Shared Decks Bundle Feed -->
             <div class="xl:col-span-8 space-y-4">
-              <div class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3">
+              <div id="shared-toolbar" class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3">
                 <div class="flex flex-wrap items-center gap-2">
+                  <select id="shared-sort-order" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                    <option value="latest">최신 업로드순</option>
+                    <option value="unowned">미보유 덱 먼저</option>
+                    <option value="count">카드 많은순</option>
+                    <option value="name">과목·단원명순</option>
+                  </select>
                   <select id="shared-filter-chapter" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs font-semibold">
                     <option value="all">모든 공유 단원</option>
                   </select>
@@ -605,15 +611,15 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <button id="btn-study-group-now" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
                     <i data-lucide="play" class="w-3.5 h-3.5"></i>
-                    <span>공유 카드 바로 학습</span>
+                    <span>전체 바로 학습</span>
                   </button>
                   <button id="btn-fork-all-group" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">
                     <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
-                    <span>모두 내 덱으로 복사</span>
+                    <span>미보유 덱 모두 가져오기</span>
                   </button>
                   <button id="btn-unshare-my-cards" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold transition">
                     <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
-                    <span>내가 올린 카드 내리기</span>
+                    <span>내가 올린 덱 내리기</span>
                   </button>
                 </div>
               </div>
@@ -960,23 +966,6 @@
           </button>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <label class="flex items-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
-            <input type="radio" name="apkg-mode" value="auto" checked class="text-indigo-600 focus:ring-indigo-500" />
-            <span><strong>덱 이름(::) 자동 분류</strong> <span class="text-slate-400 block text-[10px]">예: 생리학::김교수::1장</span></span>
-          </label>
-          <label class="flex items-center gap-2 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
-            <input type="radio" name="apkg-mode" value="manual" class="text-indigo-600 focus:ring-indigo-500" />
-            <span><strong>아래 분류로 일괄 지정</strong> <span class="text-slate-400 block text-[10px]">원하는 과목·교수·단원에 담기</span></span>
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <select id="apkg-subject" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold"></select>
-          <select id="apkg-prof" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold"></select>
-          <select id="apkg-chapter" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold"></select>
-        </div>
-
         <label class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer text-xs">
           <span class="flex items-center gap-2">
             <input id="apkg-opt-images" type="checkbox" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
@@ -984,11 +973,17 @@
           </span>
         </label>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
-          <span class="font-bold text-slate-700 dark:text-slate-200">가져온 카드를 스터디에 바로 공유:</span>
-          <select id="apkg-share-group" class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">
-            <option value="">나만 보기 (공유 안 함)</option>
-          </select>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+          <span class="font-extrabold text-slate-700 dark:text-slate-200 shrink-0">저장 · 공유</span>
+          <div class="flex flex-col gap-1.5 sm:w-72">
+            <select id="apkg-save-mine" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
+              <option value="yes" selected>내 덱에 추가</option>
+              <option value="no">내 덱에 추가 안 함</option>
+            </select>
+            <select id="apkg-share-group" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <option value="">스터디에 추가 안 함</option>
+            </select>
+          </div>
         </div>
 
         <div id="apkg-dropzone" class="relative border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-2xl p-5 text-center bg-white/80 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-900 transition cursor-pointer">
@@ -1285,6 +1280,18 @@
         </button>
       </div>
       <div id="tree-menu-actions" class="space-y-1.5"></div>
+      <div id="tree-menu-share-panel" class="hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-slate-700 dark:text-slate-200">공유할 스터디 선택</span>
+          <button id="btn-tree-share-back" type="button" class="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">← 뒤로</button>
+        </div>
+        <div id="tree-share-group-list" class="space-y-1.5 max-h-56 overflow-y-auto pr-0.5"></div>
+        <div id="tree-share-progress" class="hidden text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-2 rounded-xl text-center"></div>
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button id="btn-tree-share-cancel" type="button" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">취소</button>
+          <button id="btn-tree-share-confirm" type="button" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition">이 스터디에 공유하기</button>
+        </div>
+      </div>
       <div id="tree-menu-del-confirm" class="hidden p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 space-y-2.5">
         <p id="tree-menu-del-msg" class="text-xs font-bold text-rose-700 dark:text-rose-300 leading-relaxed"></p>
         <div class="flex items-center justify-end gap-2">
@@ -1409,6 +1416,9 @@
         activeGroupId: state.groups[0]?.id || '',
         sharedFilterChapter: 'all',
         sharedFilterAuthor: 'all',
+        sharedSortOrder: 'latest',
+        openSharedBundleKey: null,
+        sharedBundleLimit: 50,
         activeCommentCardId: null,
         studyQueue: [],
         studyIndex: 0,
@@ -1645,6 +1655,7 @@
       function getFilteredCards() {
         const q = ui.searchQuery.trim().toLowerCase();
         return state.cards.filter(card => {
+          if (card.studyOnly && ui.quickFilter !== 'shared') return false;
           if (ui.quickFilter === 'due' && !isDue(card)) return false;
           if (ui.quickFilter === 'starred' && !card.starred) return false;
           if (ui.quickFilter === 'shared' && !card.sharedGroupId) return false;
@@ -1704,9 +1715,10 @@
       }
 
       function renderSidebar() {
-        document.getElementById('count-all').textContent = state.cards.length;
-        document.getElementById('count-due').textContent = state.cards.filter(isDue).length;
-        document.getElementById('count-starred').textContent = state.cards.filter(c => c.starred).length;
+        const myPersonalCards = state.cards.filter(c => !c.studyOnly);
+        document.getElementById('count-all').textContent = myPersonalCards.length;
+        document.getElementById('count-due').textContent = myPersonalCards.filter(isDue).length;
+        document.getElementById('count-starred').textContent = myPersonalCards.filter(c => c.starred).length;
         document.getElementById('count-shared').textContent = state.cards.filter(c => !!c.sharedGroupId).length;
 
         const pct = Math.min(100, Math.round((state.todayReviewed / state.dailyGoal) * 100));
@@ -2366,6 +2378,9 @@
         const authorSel = document.getElementById('shared-filter-author');
         authorSel.innerHTML = `<option value="all">모든 작성자</option>` + authors.map(a => `<option value="${escapeHtml(a)}" ${ui.sharedFilterAuthor === a ? 'selected' : ''}>${escapeHtml(a)}</option>`).join('');
 
+        const sortSel = document.getElementById('shared-sort-order');
+        if (sortSel) sortSel.value = ui.sharedSortOrder || 'latest';
+
         const filtered = groupCards.filter(c => {
           if (ui.sharedFilterChapter !== 'all' && c.chapterId !== ui.sharedFilterChapter) return false;
           if (ui.sharedFilterAuthor !== 'all' && c.author !== ui.sharedFilterAuthor) return false;
@@ -2374,42 +2389,203 @@
 
         const listEl = document.getElementById('shared-cards-list');
         if (!filtered.length) {
-          listEl.innerHTML = `<div class="col-span-full bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 text-center text-sm text-slate-500">아직 이 스터디에 공유된 카드가 없습니다. 내 카드에서 카드를 선택해 공유해 보세요!</div>`;
+          ui.openSharedBundleKey = null;
+          listEl.innerHTML = `<div class="col-span-full bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 text-center text-sm text-slate-500">아직 이 스터디에 공유된 덱이 없습니다.<br><span class="text-xs text-slate-400">왼쪽 덱을 꾹 눌러 [스터디에 공유하기] 또는 상단 [내 덱 이 스터디에 올리기]로 덱을 올려보세요!</span></div>`;
           return;
         }
 
-        listEl.innerHTML = filtered.map(card => {
-          const sub = getSubject(card.subjectId);
-          const prof = getProf(card.subjectId, card.profId);
-          const chap = getChapter(card.subjectId, card.profId, card.chapterId);
-          const badgeStyle = (COLOR_MAP[sub?.color] || COLOR_MAP.indigo).badge;
-          return `
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between gap-3">
-              <div class="space-y-2">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <span class="px-2 py-0.5 rounded-md border font-bold ${badgeStyle}">${escapeHtml(sub?.name || '')}</span>
-                    <span class="font-semibold text-slate-500">${escapeHtml(prof?.name || '')} · ${escapeHtml(chap?.name || '')}</span>
+        const personalForkIds = new Set(
+          state.cards.filter(c => !c.sharedGroupId && c.forkedFromId).map(c => c.forkedFromId)
+        );
+        const stripPlainPreview = str => String(str || '').replace(/^__HTML__/, '').replace(/<[^>]+>/g, ' ').replace(/\{\{c\d+::(.*?)\}\}/g, '$1').replace(/\s+/g, ' ').trim();
+        const formatSharedStamp = ts => {
+          if (!ts) return '최근 공유';
+          const ms = typeof ts === 'number' ? ts : Date.parse(ts);
+          if (!ms || isNaN(ms)) return '최근 공유';
+          const diffMin = Math.floor((Date.now() - ms) / 60000);
+          if (diffMin < 1) return '방금 전';
+          if (diffMin < 60) return `${diffMin}분 전`;
+          if (diffMin < 1440) return `${Math.floor(diffMin / 60)}시간 전`;
+          const d = new Date(ms);
+          return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        };
+
+        // Build Deck Bundles grouped by (subjectId | profId | chapterId | author)
+        const bundleMap = new Map();
+        filtered.forEach(card => {
+          const key = `${card.subjectId}|${card.profId}|${card.chapterId}|${card.author || ''}`;
+          if (!bundleMap.has(key)) {
+            const sub = getSubject(card.subjectId);
+            const prof = getProf(card.subjectId, card.profId);
+            const chap = getChapter(card.subjectId, card.profId, card.chapterId);
+            bundleMap.set(key, {
+              key,
+              subjectId: card.subjectId,
+              profId: card.profId,
+              chapterId: card.chapterId,
+              subName: sub?.name || '미분류',
+              subColor: sub?.color || 'indigo',
+              profName: prof?.name || '담당 교수',
+              chapName: chap?.name || '1장',
+              author: card.author || '스터디원',
+              cards: [],
+              latestMs: 0,
+              copiedCount: 0
+            });
+          }
+          const b = bundleMap.get(key);
+          b.cards.push(card);
+          const cardMs = card.sharedAt ? Date.parse(card.sharedAt) : (card.updatedAt ? Date.parse(card.updatedAt) : 0);
+          if (cardMs && !isNaN(cardMs) && cardMs > b.latestMs) b.latestMs = cardMs;
+          if (personalForkIds.has(card.id)) b.copiedCount += 1;
+        });
+
+        let bundles = [...bundleMap.values()];
+        const sortMode = ui.sharedSortOrder || 'latest';
+        bundles.sort((a, b) => {
+          if (sortMode === 'unowned') {
+            const aMine = a.author === CURRENT_USER ? 2 : (a.copiedCount >= a.cards.length ? 1 : 0);
+            const bMine = b.author === CURRENT_USER ? 2 : (b.copiedCount >= b.cards.length ? 1 : 0);
+            if (aMine !== bMine) return aMine - bMine;
+            return b.latestMs - a.latestMs;
+          }
+          if (sortMode === 'count') return b.cards.length - a.cards.length;
+          if (sortMode === 'name') return `${a.subName}${a.chapName}`.localeCompare(`${b.subName}${b.chapName}`, 'ko');
+          return b.latestMs - a.latestMs;
+        });
+
+        // If user drilled into a specific deck bundle, show its cards with a back header
+        if (ui.openSharedBundleKey) {
+          const activeBundle = bundles.find(b => b.key === ui.openSharedBundleKey);
+          if (!activeBundle) {
+            ui.openSharedBundleKey = null;
+          } else {
+            const badgeStyle = (COLOR_MAP[activeBundle.subColor] || COLOR_MAP.indigo).badge;
+            const isMine = activeBundle.author === CURRENT_USER;
+            const canDelete = isMine || isGroupOwner(group);
+            const missingCount = isMine ? 0 : (activeBundle.cards.length - activeBundle.copiedCount);
+            const visibleCards = activeBundle.cards.slice(0, ui.sharedBundleLimit || 50);
+            const remainCount = activeBundle.cards.length - visibleCards.length;
+
+            listEl.innerHTML = `
+              <div class="col-span-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <button type="button" data-close-bundle="1" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shrink-0 transition">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> 덱 목록으로
+                  </button>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                      <span class="px-2 py-0.5 rounded-md border font-bold ${badgeStyle}">${escapeHtml(activeBundle.subName)}</span>
+                      <span class="font-bold text-slate-700 dark:text-slate-200 truncate">${escapeHtml(activeBundle.profName)} · ${escapeHtml(activeBundle.chapName)}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">
+                      올린 사람: <strong class="text-indigo-600 dark:text-indigo-400">${escapeHtml(activeBundle.author)}</strong> · 총 ${activeBundle.cards.length}장 · ${formatSharedStamp(activeBundle.latestMs)}
+                    </div>
                   </div>
-                  <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">${escapeHtml(card.author)}</span>
                 </div>
-                <div class="text-sm font-bold leading-relaxed">${formatRichText(card.front, 'front')}</div>
-                <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${formatRichText(card.back, 'back')}</div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  ${!isMine ? `<button type="button" data-import-bundle="${escapeHtml(activeBundle.key)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition"><i data-lucide="download" class="w-3.5 h-3.5"></i> ${missingCount > 0 ? `내 덱으로 가져오기 (${missingCount}장)` : '이미 내 덱에 있음 ✓'}</button>` : ''}
+                  <button type="button" data-study-bundle="${escapeHtml(activeBundle.key)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition"><i data-lucide="play" class="w-3.5 h-3.5"></i> 바로 학습</button>
+                  ${canDelete ? `<button type="button" data-delete-bundle="${escapeHtml(activeBundle.key)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 덱 공유 삭제</button>` : ''}
+                </div>
               </div>
-              <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                <div class="flex items-center gap-1.5">
-                  <button type="button" data-like-card="${card.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 text-xs font-bold text-slate-600 dark:text-slate-300 transition">
-                    <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i> ${card.likes || 0}
+            ` + visibleCards.map(card => `
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col justify-between gap-3">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between gap-2 text-[11px]">
+                    <span class="font-semibold text-slate-400">${escapeHtml(activeBundle.chapName)}</span>
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">${escapeHtml(card.author)}</span>
+                  </div>
+                  <div class="text-sm font-bold leading-relaxed">${formatRichText(card.front, 'front')}</div>
+                  <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${formatRichText(card.back, 'back')}</div>
+                </div>
+                <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" data-like-card="${card.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 text-xs font-bold text-slate-600 dark:text-slate-300 transition">
+                      <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i> ${card.likes || 0}
+                    </button>
+                    <button type="button" data-comment-card="${card.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-xs font-bold text-slate-600 dark:text-slate-300 transition">
+                      <i data-lucide="message-square" class="w-3.5 h-3.5"></i> ${(card.comments || []).length}
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" data-fork-card="${card.id}" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">복사</button>
+                    <button type="button" data-edit-card="${card.id}" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">편집</button>
+                    ${(card.author === CURRENT_USER || isGroupOwner(group)) ? `<button type="button" data-unshare-card="${card.id}" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="스터디 공유에서 삭제">삭제</button>` : ''}
+                  </div>
+                </div>
+              </div>
+            `).join('') + (remainCount > 0 ? `
+              <div class="col-span-full text-center py-2">
+                <button type="button" data-load-more-bundle="1" class="px-5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+                  나머지 카드 더 보기 (${remainCount}장 남음)
+                </button>
+              </div>
+            ` : '');
+            return;
+          }
+        }
+
+        // Default View: Shared Deck Bundles Grid
+        listEl.innerHTML = bundles.map(b => {
+          const badgeStyle = (COLOR_MAP[b.subColor] || COLOR_MAP.indigo).badge;
+          const isMine = b.author === CURRENT_USER;
+          const canDelete = isMine || isGroupOwner(group);
+          const isRecent = b.latestMs && (Date.now() - b.latestMs) < 86400000;
+          const missingCount = isMine ? 0 : (b.cards.length - b.copiedCount);
+
+          let statusBadge = '';
+          if (isMine) {
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">내가 올린 덱</span>';
+          } else if (b.copiedCount === 0) {
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">미보유</span>';
+          } else if (missingCount > 0) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">+${missingCount}장 업데이트</span>`;
+          } else {
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">내 덱에 있음 ✓</span>';
+          }
+
+          const sampleQ = stripPlainPreview(b.cards[0]?.front || '').slice(0, 68);
+          return `
+            <div class="bg-white dark:bg-slate-900 border ${(!isMine && b.copiedCount === 0) ? 'border-indigo-300 dark:border-indigo-800 ring-1 ring-indigo-100 dark:ring-indigo-950' : 'border-slate-200 dark:border-slate-800'} rounded-2xl p-4 flex flex-col justify-between gap-3.5 shadow-xs hover:shadow-md transition">
+              <div class="space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded-md border text-[11px] font-bold ${badgeStyle}">${escapeHtml(b.subName)}</span>
+                    ${isRecent ? '<span class="px-1.5 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-extrabold tracking-wide">NEW</span>' : ''}
+                    ${statusBadge}
+                  </div>
+                  <span class="shrink-0 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-extrabold">${b.cards.length}장</span>
+                </div>
+                <div>
+                  <h4 class="text-base font-extrabold text-slate-900 dark:text-white leading-snug">${escapeHtml(b.chapName)}</h4>
+                  <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(b.profName)} · 올린 사람 <strong class="text-indigo-600 dark:text-indigo-400">${escapeHtml(b.author)}</strong> · ${formatSharedStamp(b.latestMs)}</p>
+                </div>
+                ${sampleQ ? `<div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 text-[11px] text-slate-500 dark:text-slate-400 truncate">예시 문항: ${escapeHtml(sampleQ)}</div>` : ''}
+              </div>
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  ${!isMine ? `
+                    <button type="button" data-import-bundle="${escapeHtml(b.key)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl ${missingCount > 0 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'} text-xs font-bold transition">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                      <span>${missingCount > 0 ? '내 덱으로 가져오기' : '가져오기 완료'}</span>
+                    </button>
+                  ` : ''}
+                  <button type="button" data-study-bundle="${escapeHtml(b.key)}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                    <span>바로 학습</span>
                   </button>
-                  <button type="button" data-comment-card="${card.id}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 text-xs font-bold text-slate-600 dark:text-slate-300 transition">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> ${(card.comments || []).length}
+                  <button type="button" data-open-bundle="${escapeHtml(b.key)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                    <span>카드 보기</span>
                   </button>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" data-fork-card="${card.id}" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">내 덱으로 복사</button>
-                  <button type="button" data-edit-card="${card.id}" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">편집</button>
-                  ${(card.author === CURRENT_USER || isGroupOwner(group)) ? `<button type="button" data-unshare-card="${card.id}" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="스터디 공유에서 삭제">공유 삭제</button>` : ''}
-                </div>
+                ${canDelete ? `
+                  <button type="button" data-delete-bundle="${escapeHtml(b.key)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="이 공유 덱 내리기">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>공유 삭제</span>
+                  </button>
+                ` : ''}
               </div>
             </div>
           `;
@@ -2702,15 +2878,12 @@
         const sel = document.getElementById('export-subject-select');
         sel.innerHTML = `<option value="all">전체 카드 (${state.cards.length}장)</option>` +
           state.taxonomy.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${state.cards.filter(c => c.subjectId === s.id).length}장)</option>`).join('');
-        populateCascadeSelects('apkg-subject', 'apkg-prof', 'apkg-chapter',
-          ui.filterSubject !== 'all' ? ui.filterSubject : state.taxonomy[0]?.id,
-          ui.filterProf !== 'all' ? ui.filterProf : null,
-          ui.filterChapter !== 'all' ? ui.filterChapter : null
-        );
+        const apkgMineSel = document.getElementById('apkg-save-mine');
+        if (apkgMineSel) apkgMineSel.value = 'yes';
         const apkgShareSel = document.getElementById('apkg-share-group');
         if (apkgShareSel) {
-          apkgShareSel.innerHTML = `<option value="">나만 보기 (공유 안 함)</option>` +
-            state.groups.map(g => `<option value="${g.id}" ${g.id === ui.activeGroupId ? 'selected' : ''}>스터디 공유: ${escapeHtml(g.name)} (${g.inviteCode})</option>`).join('');
+          apkgShareSel.innerHTML = `<option value="">스터디에 추가 안 함</option>` +
+            state.groups.map(g => `<option value="${g.id}">스터디에 추가: ${escapeHtml(g.name)} (${g.inviteCode})</option>`).join('');
         }
         document.getElementById('apkg-status-text').textContent = '빈칸(Cloze), 태그, 이미지 포함 덱 지원 (.anki2 / .anki21)';
         document.getElementById('export-code-box').value = '';
@@ -3074,10 +3247,12 @@
 
       function confirmPendingApkgImport() {
         if (!pendingApkg) return;
-        const mode = document.querySelector('input[name="apkg-mode"]:checked')?.value || 'auto';
-        const fallbackSub = document.getElementById('apkg-subject').value;
-        const fallbackProf = document.getElementById('apkg-prof').value;
-        const fallbackChap = document.getElementById('apkg-chapter').value;
+        const saveMine = (document.getElementById('apkg-save-mine')?.value || 'yes') === 'yes';
+        const chosenShareGrp = document.getElementById('apkg-share-group')?.value || '';
+        if (!saveMine && !chosenShareGrp) {
+          showToast('내 덱에 추가 또는 스터디에 추가 중 최소 하나를 선택해 주세요.', 'error');
+          return;
+        }
         const frontVal = document.getElementById('apkg-map-front').value;
         const backVal = document.getElementById('apkg-map-back').value;
         const keepHtml = document.getElementById('apkg-keep-html').checked;
@@ -3085,29 +3260,27 @@
         let importedCount = 0;
         const importedSharedCards = [];
         let firstImportedSub = null;
+        const stampIso = new Date().toISOString();
 
         pendingApkg.notes.forEach(n => {
           const front = buildMappedField(n.fields, frontVal, pendingApkg.mediaDataMap, keepHtml);
           const back = buildMappedField(n.fields, backVal, pendingApkg.mediaDataMap, keepHtml);
           if (!front || front === '__HTML__') return;
 
-          let target = { subjectId: fallbackSub, profId: fallbackProf, chapterId: fallbackChap };
-          if (mode === 'auto') {
-            const parts = n.deckName.split('::').map(p => p.trim()).filter(Boolean);
-            if (parts.length >= 3) {
-              target = ensureTaxonomyPath(parts[0], parts[1], parts.slice(2).join(' - '));
-            } else if (parts.length === 2) {
-              target = ensureTaxonomyPath(parts[0], 'Anki 불러오기', parts[1]);
-            } else {
-              const label = (parts[0] && parts[0] !== 'Default') ? parts[0] : pendingApkg.baseFileName;
-              target = ensureTaxonomyPath(label, 'Anki 불러오기', '1장. 가져온 카드');
-            }
+          const parts = n.deckName.split('::').map(p => p.trim()).filter(Boolean);
+          let target;
+          if (parts.length >= 3) {
+            target = ensureTaxonomyPath(parts[0], parts[1], parts.slice(2).join(' - '));
+          } else if (parts.length === 2) {
+            target = ensureTaxonomyPath(parts[0], 'Anki 불러오기', parts[1]);
+          } else {
+            const label = (parts[0] && parts[0] !== 'Default') ? parts[0] : pendingApkg.baseFileName;
+            target = ensureTaxonomyPath(label, 'Anki 불러오기', '1장. 가져온 카드');
           }
 
           if (!firstImportedSub) firstImportedSub = target.subjectId;
           const tags = n.tags ? n.tags.split(/\s+/).filter(Boolean) : ['Anki가져오기'];
 
-          const chosenShareGrp = document.getElementById('apkg-share-group')?.value || '';
           const newCardObj = {
             id: uid('c'),
             subjectId: target.subjectId,
@@ -3119,6 +3292,9 @@
             tags,
             starred: false,
             sharedGroupId: chosenShareGrp,
+            studyOnly: !saveMine,
+            sharedAt: chosenShareGrp ? stampIso : undefined,
+            updatedAt: stampIso,
             author: CURRENT_USER,
             likes: 0,
             srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
@@ -3134,7 +3310,11 @@
         document.getElementById('modal-share-io').classList.add('hidden');
         document.getElementById('modal-share-io').classList.remove('flex');
 
-        if (mode === 'auto' && firstImportedSub) {
+        if (!saveMine && chosenShareGrp) {
+          ui.activeGroupId = chosenShareGrp;
+          ui.openSharedBundleKey = null;
+          ui.activeTab = 'group';
+        } else if (firstImportedSub) {
           ui.filterSubject = firstImportedSub;
           ui.filterProf = 'all';
           ui.filterChapter = 'all';
@@ -3144,10 +3324,15 @@
         saveState();
         renderAll();
         if (importedSharedCards.length > 0 && sbConnected) {
-          showToast(`${importedCount}장 불러옴! 스터디 서버에 실시간 업로드 중...`, 'success');
-          syncUpsertCards(importedSharedCards).then(() => {
-            showToast(`${importedSharedCards.length}장이 스터디원들에게 실시간 공유되었습니다!`, 'success');
+          const msg = saveMine
+            ? `${importedCount}장을 내 덱에 저장하고 스터디에 업로드 중...`
+            : `${importedCount}장을 스터디에 바로 업로드 중...`;
+          showToast(msg, 'success');
+          syncUpsertCards(importedSharedCards).then(ok => {
+            if (ok) showToast(`${importedSharedCards.length}장이 스터디에 실시간 공유되었습니다!`, 'success');
           });
+        } else if (!saveMine && chosenShareGrp) {
+          showToast(`${importedCount}장을 선택한 스터디에 올렸습니다!`, 'success');
         } else {
           showToast(`Anki(.apkg)에서 ${importedCount}장의 카드를 깔끔하게 불러왔습니다!`, 'success');
         }
@@ -3355,7 +3540,10 @@
         const modal = document.getElementById('modal-tree-menu');
         const actionsEl = document.getElementById('tree-menu-actions');
         const delConfirm = document.getElementById('tree-menu-del-confirm');
+        const sharePanel = document.getElementById('tree-menu-share-panel');
+        actionsEl.classList.remove('hidden');
         delConfirm.classList.add('hidden');
+        if (sharePanel) sharePanel.classList.add('hidden');
 
         let title = '';
         let typeLabel = '';
@@ -3370,6 +3558,7 @@
           cardCount = state.cards.filter(c => c.subjectId === sub.id).length;
           activeTreeMenu = { type: 'sub', subId: sub.id, name: sub.name, cardCount };
           buttons = [
+            { act: 'share-study', icon: 'share-2', label: `스터디에 공유하기 (카드 ${cardCount}장)`, cls: 'text-indigo-700 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60' },
             { act: 'add-prof', icon: 'plus', label: '새 교수 추가', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'rename', icon: 'pencil', label: '과목 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'delete', icon: 'trash-2', label: `과목(덱) 삭제 (카드 ${cardCount}장 포함)`, cls: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50' }
@@ -3383,6 +3572,7 @@
           cardCount = state.cards.filter(c => c.subjectId === sId && c.profId === pId).length;
           activeTreeMenu = { type: 'prof', subId: sId, profId: pId, name: prof.name, cardCount };
           buttons = [
+            { act: 'share-study', icon: 'share-2', label: `스터디에 공유하기 (카드 ${cardCount}장)`, cls: 'text-indigo-700 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60' },
             { act: 'add-chap', icon: 'plus', label: '새 단원 추가', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'rename', icon: 'pencil', label: '교수 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'move', icon: 'arrow-right-left', label: '다른 과목으로 옮기기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
@@ -3397,6 +3587,7 @@
           cardCount = state.cards.filter(c => c.chapterId === cId).length;
           activeTreeMenu = { type: 'chap', subId: sId, profId: pId, chapId: cId, name: ch.name, cardCount };
           buttons = [
+            { act: 'share-study', icon: 'share-2', label: `스터디에 공유하기 (카드 ${cardCount}장)`, cls: 'text-indigo-700 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60' },
             { act: 'rename', icon: 'pencil', label: '단원 이름 바꾸기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'move', icon: 'arrow-right-left', label: '다른 과목·교수로 옮기기', cls: 'text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800' },
             { act: 'delete', icon: 'trash-2', label: `단원(덱) 삭제 (카드 ${cardCount}장 포함)`, cls: 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50' }
@@ -3422,6 +3613,8 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.getElementById('tree-menu-del-confirm').classList.add('hidden');
+        document.getElementById('tree-menu-share-panel')?.classList.add('hidden');
+        document.getElementById('tree-menu-actions')?.classList.remove('hidden');
         activeTreeMenu = null;
       }
 
@@ -3686,6 +3879,8 @@
           existing.author = row.author || existing.author;
           const matchedGrp = ensureGroupForRoomCode(row.room_code || sbConfig.room); existing.sharedGroupId = matchedGrp.id;
           existing.lastEditedBy = row.updated_by || existing.lastEditedBy;
+          existing.updatedAt = row.updated_at || existing.updatedAt || new Date().toISOString();
+          existing.sharedAt = row.updated_at || existing.sharedAt || new Date().toISOString();
           if (notify && row.updated_by && row.updated_by !== CURRENT_USER) {
             const latestHist = Array.isArray(row.comments) ? row.comments.find(x => x.type === 'history') : null;
             const summary = latestHist ? ` (${latestHist.text})` : '';
@@ -3704,6 +3899,8 @@
             starred: !!row.starred,
             sharedGroupId: ensureGroupForRoomCode(row.room_code || sbConfig.room).id,
             author: row.author || '스터디원',
+            updatedAt: row.updated_at || new Date().toISOString(),
+            sharedAt: row.updated_at || new Date().toISOString(),
             likes: 0,
             srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
             comments: Array.isArray(row.comments) ? row.comments : []
@@ -3738,16 +3935,18 @@
         }
       }
 
-      async function syncDeleteCards(cardIds) {
+      async function syncDeleteCards(cardIds, roomCodeOverride) {
         if (!sbClient && sbConfig.url && sbConfig.key) {
           try { ensureSupabaseClient(); } catch (e) {}
         }
         if (!sbClient || !cardIds || !cardIds.length) return;
+        const activeGrp = state.groups.find(g => g.id === ui.activeGroupId);
+        const targetRoom = roomCodeOverride || activeGrp?.inviteCode || sbConfig.room;
         try {
           const chunkSize = 40;
           for (let i = 0; i < cardIds.length; i += chunkSize) {
             const batch = cardIds.slice(i, i + chunkSize);
-            await sbClient.from('mc_cards').delete().in('id', batch).eq('room_code', sbConfig.room);
+            await sbClient.from('mc_cards').delete().in('id', batch).eq('room_code', targetRoom);
           }
         } catch (e) {}
       }
@@ -4640,11 +4839,91 @@
           document.getElementById('tree-menu-del-confirm').classList.add('hidden');
         });
         document.getElementById('btn-tree-del-ok').addEventListener('click', executeTreeDeckDelete);
+        document.getElementById('btn-tree-share-back').addEventListener('click', () => {
+          document.getElementById('tree-menu-share-panel').classList.add('hidden');
+          document.getElementById('tree-menu-actions').classList.remove('hidden');
+        });
+        document.getElementById('btn-tree-share-cancel').addEventListener('click', closeTreeContextMenu);
+        document.getElementById('btn-tree-share-confirm').addEventListener('click', async () => {
+          if (!activeTreeMenu) return;
+          const selRadio = document.querySelector('input[name="tree-share-target"]:checked');
+          if (!selRadio) { showToast('공유할 스터디를 선택해 주세요.', 'error'); return; }
+          const targetGroup = state.groups.find(g => g.id === selRadio.value);
+          if (!targetGroup) return;
+
+          const m = { ...activeTreeMenu };
+          let cardsToShare = [];
+          if (m.type === 'sub') cardsToShare = state.cards.filter(c => c.subjectId === m.subId);
+          else if (m.type === 'prof') cardsToShare = state.cards.filter(c => c.subjectId === m.subId && c.profId === m.profId);
+          else if (m.type === 'chap') cardsToShare = state.cards.filter(c => c.chapterId === m.chapId);
+
+          if (!cardsToShare.length) { showToast('공유할 카드가 없습니다.', 'error'); return; }
+
+          const btn = document.getElementById('btn-tree-share-confirm');
+          const progEl = document.getElementById('tree-share-progress');
+          btn.disabled = true;
+          progEl.classList.remove('hidden');
+          progEl.textContent = `0 / ${cardsToShare.length}장 스터디에 공유 중...`;
+
+          const stampIso = new Date().toISOString();
+          cardsToShare.forEach(c => {
+            c.sharedGroupId = targetGroup.id;
+            c.sharedAt = stampIso;
+            c.updatedAt = stampIso;
+            if (!c.author) c.author = CURRENT_USER;
+          });
+          saveState();
+          const ok = await syncUpsertCards(cardsToShare, (done, total) => {
+            progEl.textContent = `${done} / ${total}장 실시간 업로드 중...`;
+          });
+          btn.disabled = false;
+          closeTreeContextMenu();
+          ui.activeGroupId = targetGroup.id;
+          ui.openSharedBundleKey = null;
+          renderAll();
+          if (ok || !sbClient) {
+            showToast(`"${m.name}" 덱(${cardsToShare.length}장)을 "${targetGroup.name}" 스터디에 공유했습니다!`, 'success');
+          }
+        });
         document.getElementById('tree-menu-actions').addEventListener('click', e => {
           const btn = e.target.closest('[data-tm-act]');
           if (!btn || !activeTreeMenu) return;
           const act = btn.dataset.tmAct;
           const m = { ...activeTreeMenu };
+          if (act === 'share-study') {
+            if (!m.cardCount) {
+              showToast('이 덱에는 공유할 카드가 없습니다.', 'error');
+              return;
+            }
+            const listEl = document.getElementById('tree-share-group-list');
+            const confirmBtn = document.getElementById('btn-tree-share-confirm');
+            const progEl = document.getElementById('tree-share-progress');
+            progEl.classList.add('hidden');
+            if (!state.groups.length) {
+              listEl.innerHTML = `<div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 text-xs text-slate-500 text-center">참여 중인 스터디가 없습니다.<br>먼저 [스터디 공유] 탭에서 스터디를 만들거나 코드로 참여해 주세요.</div>`;
+              confirmBtn.disabled = true;
+              confirmBtn.classList.add('opacity-50');
+            } else {
+              confirmBtn.disabled = false;
+              confirmBtn.classList.remove('opacity-50');
+              const defaultGid = state.groups.some(g => g.id === ui.activeGroupId) ? ui.activeGroupId : state.groups[0].id;
+              listEl.innerHTML = state.groups.map(g => `
+                <label class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-400 cursor-pointer transition bg-slate-50/70 dark:bg-slate-950/70">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <input type="radio" name="tree-share-target" value="${g.id}" ${g.id === defaultGid ? 'checked' : ''} class="accent-indigo-600 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(g.name)}</div>
+                      <div class="text-[10px] text-slate-400">${escapeHtml(g.inviteCode)} · ${g.members.length}명 참여 중</div>
+                    </div>
+                  </div>
+                </label>
+              `).join('');
+            }
+            document.getElementById('tree-menu-actions').classList.add('hidden');
+            document.getElementById('tree-menu-del-confirm').classList.add('hidden');
+            document.getElementById('tree-menu-share-panel').classList.remove('hidden');
+            return;
+          }
           if (act === 'delete') {
             document.getElementById('tree-menu-del-msg').textContent =
               `"${m.name}" 덱과 안에 들어 있는 카드 ${m.cardCount}장을 정말 삭제할까요?`;
@@ -5119,6 +5398,7 @@
           ui.activeGroupId = e.target.value;
           ui.sharedFilterChapter = 'all';
           ui.sharedFilterAuthor = 'all';
+          ui.openSharedBundleKey = null;
           const grp = state.groups.find(g => g.id === ui.activeGroupId);
           if (grp && sbConfig.url && sbConfig.key) {
             sbConfig.room = grp.inviteCode;
@@ -5261,7 +5541,103 @@
           showToast(`"${name}" 스터디(${ng.inviteCode})가 생성되어 실시간 방으로 연결되었습니다!`, 'success');
         });
 
-        document.getElementById('shared-cards-list').addEventListener('click', e => {
+        document.getElementById('shared-sort-order')?.addEventListener('change', e => {
+          ui.sharedSortOrder = e.target.value;
+          renderStudyGroupView();
+          if (window.lucide) lucide.createIcons();
+        });
+
+        const getBundleCardsByKey = key => {
+          return state.cards.filter(c =>
+            c.sharedGroupId === ui.activeGroupId &&
+            `${c.subjectId}|${c.profId}|${c.chapterId}|${c.author || ''}` === key
+          );
+        };
+
+        document.getElementById('shared-cards-list').addEventListener('click', async e => {
+          const closeB = e.target.closest('[data-close-bundle]');
+          if (closeB) {
+            ui.openSharedBundleKey = null;
+            ui.sharedBundleLimit = 50;
+            renderStudyGroupView();
+            if (window.lucide) lucide.createIcons();
+            return;
+          }
+          const loadMore = e.target.closest('[data-load-more-bundle]');
+          if (loadMore) {
+            ui.sharedBundleLimit = (ui.sharedBundleLimit || 50) + 50;
+            renderStudyGroupView();
+            if (window.lucide) lucide.createIcons();
+            return;
+          }
+          const openB = e.target.closest('[data-open-bundle]');
+          if (openB) {
+            ui.openSharedBundleKey = openB.dataset.openBundle;
+            ui.sharedBundleLimit = 50;
+            renderStudyGroupView();
+            if (window.lucide) lucide.createIcons();
+            return;
+          }
+          const studyB = e.target.closest('[data-study-bundle]');
+          if (studyB) {
+            const bCards = getBundleCardsByKey(studyB.dataset.studyBundle);
+            if (!bCards.length) return;
+            ui.studyScope = 'filtered';
+            ui.studyQueue = bCards.map(c => c.id);
+            ui.studyIndex = 0;
+            ui.studyFlipped = false;
+            ui.sessionWaitingMap = new Map();
+            ui.activeTab = 'study';
+            renderAll();
+            return;
+          }
+          const importB = e.target.closest('[data-import-bundle]');
+          if (importB) {
+            const bCards = getBundleCardsByKey(importB.dataset.importBundle);
+            if (!bCards.length) return;
+            const existingForks = new Set(state.cards.filter(c => !c.sharedGroupId && c.forkedFromId).map(c => c.forkedFromId));
+            const toImport = bCards.filter(c => !existingForks.has(c.id));
+            if (!toImport.length) {
+              showToast('이미 이 덱의 모든 카드가 내 카드함에 들어 있습니다!');
+              return;
+            }
+            toImport.forEach(orig => {
+              state.cards.unshift({
+                ...orig,
+                id: uid('c'),
+                forkedFromId: orig.id,
+                author: `${CURRENT_USER} (복사됨)`,
+                sharedGroupId: '',
+                studyOnly: false,
+                srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
+                comments: []
+              });
+            });
+            saveState();
+            renderAll();
+            showToast(`${toImport.length}장의 카드를 내 개인 덱으로 가져왔습니다!`, 'success');
+            return;
+          }
+          const delB = e.target.closest('[data-delete-bundle]');
+          if (delB) {
+            const bCards = getBundleCardsByKey(delB.dataset.deleteBundle);
+            const g = state.groups.find(x => x.id === ui.activeGroupId);
+            if (!bCards.length) return;
+            const allowed = bCards.every(c => c.author === CURRENT_USER) || isGroupOwner(g);
+            if (!allowed) {
+              showToast('본인이 올린 덱 또는 방장만 공유 삭제할 수 있습니다.', 'error');
+              return;
+            }
+            if (!confirm(`이 공유 덱(${bCards.length}장)을 스터디에서 삭제할까요?\n(내 개인 카드함의 원본은 유지됩니다.)`)) return;
+            const ids = bCards.map(c => c.id);
+            bCards.forEach(c => { c.sharedGroupId = ''; });
+            ui.openSharedBundleKey = null;
+            saveState();
+            await syncDeleteCards(ids, g?.inviteCode);
+            renderAll();
+            showToast(`공유 덱(${ids.length}장)을 스터디에서 내렸습니다.`, 'success');
+            return;
+          }
           const like = e.target.closest('[data-like-card]');
           if (like) {
             const c = state.cards.find(x => x.id === like.dataset.likeCard);
@@ -5272,6 +5648,19 @@
           if (cm) { openCommentsDrawer(cm.dataset.commentCard); return; }
           const edit = e.target.closest('[data-edit-card]');
           if (edit) { openEditorModal(edit.dataset.editCard); return; }
+          const unshare = e.target.closest('[data-unshare-card]');
+          if (unshare) {
+            const c = state.cards.find(x => x.id === unshare.dataset.unshareCard);
+            const g = state.groups.find(x => x.id === ui.activeGroupId);
+            if (c && (c.author === CURRENT_USER || isGroupOwner(g))) {
+              c.sharedGroupId = '';
+              saveState();
+              await syncDeleteCards([c.id], g?.inviteCode);
+              renderAll();
+              showToast('해당 카드를 스터디 공유에서 삭제했습니다 (내 카드함에는 유지됩니다).');
+            }
+            return;
+          }
           const fork = e.target.closest('[data-fork-card]');
           if (fork) {
             const orig = state.cards.find(x => x.id === fork.dataset.forkCard);
@@ -5279,8 +5668,10 @@
               state.cards.unshift({
                 ...orig,
                 id: uid('c'),
+                forkedFromId: orig.id,
                 author: `${CURRENT_USER} (복사됨)`,
                 sharedGroupId: '',
+                studyOnly: false,
                 srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
                 comments: []
               });
@@ -5355,7 +5746,8 @@
           progEl.classList.remove('hidden');
           progEl.textContent = `0 / ${cardsToShare.length}장 업로드 중...`;
 
-          cardsToShare.forEach(c => { c.sharedGroupId = g.id; });
+          const stampIso = new Date().toISOString();
+          cardsToShare.forEach(c => { c.sharedGroupId = g.id; c.sharedAt = stampIso; c.updatedAt = stampIso; });
           saveState();
           const ok = await syncUpsertCards(cardsToShare, (done, total) => {
             progEl.textContent = `${done} / ${total}장 실시간 업로드 중...`;
@@ -5500,12 +5892,14 @@
           showToast(`내가 올린 카드 ${ids.length}장을 스터디에서 모두 내렸습니다.`, 'success');
         });
         document.getElementById('btn-fork-all-group').addEventListener('click', () => {
-          const gCards = state.cards.filter(c => c.sharedGroupId === ui.activeGroupId && c.author !== CURRENT_USER);
-          if (!gCards.length) { showToast('복사할 스터디원 카드가 없습니다.'); return; }
+          const existingForks = new Set(state.cards.filter(c => !c.sharedGroupId && c.forkedFromId).map(c => c.forkedFromId));
+          const gCards = state.cards.filter(c => c.sharedGroupId === ui.activeGroupId && c.author !== CURRENT_USER && !existingForks.has(c.id));
+          if (!gCards.length) { showToast('새로 가져올 미보유 덱 카드가 없습니다.'); return; }
           gCards.forEach(orig => {
             state.cards.unshift({
               ...orig,
               id: uid('c'),
+              forkedFromId: orig.id,
               author: `${CURRENT_USER} (복사됨)`,
               sharedGroupId: '',
               srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
@@ -5514,7 +5908,7 @@
           });
           saveState();
           renderAll();
-          showToast(`${gCards.length}장의 스터디 카드를 내 덱으로 가져왔습니다!`, 'success');
+          showToast(`미보유 카드 ${gCards.length}장을 내 덱으로 가져왔습니다!`, 'success');
         });
 
         // Comments Drawer Events
@@ -5640,8 +6034,7 @@
             showToast('코드가 길어 잘렸거나 형식이 맞지 않습니다. 대용량 덱은 스터디에 직접 올리거나 JSON 파일로 공유해 주세요.', 'error');
           }
         });
-        document.getElementById('apkg-subject').addEventListener('change', e => populateCascadeSelects('apkg-subject', 'apkg-prof', 'apkg-chapter', e.target.value, null, null));
-        document.getElementById('apkg-prof').addEventListener('change', e => populateCascadeSelects('apkg-subject', 'apkg-prof', 'apkg-chapter', document.getElementById('apkg-subject').value, e.target.value, null));
+
         document.getElementById('btn-gen-sample-apkg').addEventListener('click', generateAndDownloadSampleApkg);
         ['apkg-map-front', 'apkg-map-back', 'apkg-keep-html'].forEach(id => {
           document.getElementById(id).addEventListener('change', renderApkgPreviewPanel);
