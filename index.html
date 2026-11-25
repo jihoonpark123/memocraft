@@ -15,8 +15,8 @@
     // 모든 스터디원이 서버 설정 없이 이메일·비밀번호·이름·학번만으로 바로 로그인할 수 있습니다.
     window.MEMOCRAFT_CONFIG = {
       url: 'https://xxsfsopzmomhxdrmvtps.supabase.co',
-      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4c2Zzb3B6bW9taHhkcm12dHBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1NzI2OTcsImV4cCI6MjExMTE0ODY5N30.8PEcPRvCh12bK89mwA4JyM527WdgIr2Qig108i17ZjE',
-      adminPin: '1220' // 관리자 페이지 PIN 번호 (원하는 숫자로 변경 가능)
+      key: '',
+      adminPin: '2026' // 관리자 페이지 PIN 번호 (원하는 숫자로 변경 가능)
     };
   </script>
   <script>
@@ -535,6 +535,10 @@
                 <p id="group-desc" class="text-xs sm:text-sm text-indigo-100 max-w-2xl"></p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
+                <button id="btn-push-deck-to-group" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs sm:text-sm font-extrabold shadow-sm transition">
+                  <i data-lucide="upload" class="w-4 h-4"></i>
+                  <span>내 덱 이 스터디에 올리기</span>
+                </button>
                 <button id="btn-copy-invite" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs sm:text-sm font-bold shadow-sm transition">
                   <i data-lucide="link" class="w-4 h-4"></i>
                   <span>초대 링크·코드 복사</span>
@@ -554,6 +558,10 @@
                 <button id="btn-delete-group" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/80 hover:bg-rose-600 border border-rose-300/30 text-white text-xs sm:text-sm font-bold transition" title="현재 스터디 제거">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                   <span>스터디 제거</span>
+                </button>
+                <button id="btn-open-group-history" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs sm:text-sm font-bold transition" title="스터디 수정 내역 보기">
+                  <i data-lucide="history" class="w-4 h-4"></i>
+                  <span>수정 내역</span>
                 </button>
               </div>
             </div>
@@ -594,10 +602,20 @@
                     <option value="all">모든 작성자</option>
                   </select>
                 </div>
-                <button id="btn-fork-all-group" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">
-                  <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
-                  <span>이 스터디 카드 모두 내 덱으로 복사</span>
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button id="btn-study-group-now" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                    <span>공유 카드 바로 학습</span>
+                  </button>
+                  <button id="btn-fork-all-group" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">
+                    <i data-lucide="copy-plus" class="w-3.5 h-3.5"></i>
+                    <span>모두 내 덱으로 복사</span>
+                  </button>
+                  <button id="btn-unshare-my-cards" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 text-xs font-bold transition">
+                    <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
+                    <span>내가 올린 카드 내리기</span>
+                  </button>
+                </div>
               </div>
               <div id="shared-cards-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
@@ -895,7 +913,7 @@
     <div class="bg-white dark:bg-slate-900 w-full max-w-md h-full flex flex-col shadow-2xl border-l border-slate-200 dark:border-slate-800">
       <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
         <div>
-          <h3 class="text-sm font-extrabold">스터디 댓글 · 수정 이력 (되돌리기)</h3>
+          <h3 class="text-sm font-extrabold">스터디 댓글 & 수정 제안</h3>
           <p id="comments-card-preview" class="text-xs text-slate-500 truncate max-w-[280px] mt-0.5"></p>
         </div>
         <button id="btn-close-comments" type="button" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -965,6 +983,13 @@
             <span><strong>이미지 용량 최적화 (권장)</strong> <span class="text-slate-400 text-[11px] block sm:inline sm:ml-1">가로 1,600px · WebP 82% (원본 고화질 필요 시 체크 해제)</span></span>
           </span>
         </label>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs">
+          <span class="font-bold text-slate-700 dark:text-slate-200">가져온 카드를 스터디에 바로 공유:</span>
+          <select id="apkg-share-group" class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            <option value="">나만 보기 (공유 안 함)</option>
+          </select>
+        </div>
 
         <div id="apkg-dropzone" class="relative border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-2xl p-5 text-center bg-white/80 dark:bg-slate-900/70 hover:bg-white dark:hover:bg-slate-900 transition cursor-pointer">
           <input id="apkg-file-input" type="file" accept=".apkg" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -1103,6 +1128,66 @@
         <button id="btn-dg-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
         <button id="btn-dg-confirm" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">스터디 제거</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6D: PUSH DECK DIRECTLY TO STUDY GROUP -->
+  <div id="modal-push-deck" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold flex items-center gap-1.5">
+          <i data-lucide="upload" class="w-4 h-4 text-emerald-500"></i> 내 덱을 이 스터디에 실시간 올리기
+        </h3>
+        <button id="btn-pd-close" type="button" class="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <p id="pd-target-desc" class="text-xs text-slate-500 dark:text-slate-400"></p>
+      <div class="space-y-2.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">공유할 과목 선택</label>
+          <select id="pd-subject" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-semibold"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">공유할 교수님 선택</label>
+          <select id="pd-prof" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-semibold"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">공유할 단원 선택</label>
+          <select id="pd-chapter" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-semibold"></select>
+        </div>
+        <div id="pd-count-preview" class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-xs font-bold text-indigo-700 dark:text-indigo-300 text-center"></div>
+        <div id="pd-progress" class="hidden text-xs font-bold text-emerald-600 text-center"></div>
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-pd-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
+        <button id="btn-pd-submit" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">스터디에 실시간 올리기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6E: UNSHARE / DELETE MY UPLOADED CARDS FROM STUDY GROUP -->
+  <div id="modal-unshare-mine" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl animate-fade-up">
+      <h3 class="text-base font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+        <i data-lucide="undo-2" class="w-4 h-4"></i> 내가 올린 카드 스터디에서 내리기
+      </h3>
+      <p id="um-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button id="btn-um-cancel" type="button" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">취소</button>
+        <button id="btn-um-confirm" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white">스터디에서 내리기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6F: COMPACT STUDY GROUP EDIT HISTORY -->
+  <div id="modal-group-history" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/55 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md max-h-[75vh] flex flex-col shadow-2xl overflow-hidden animate-fade-up">
+      <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <h3 class="text-sm font-extrabold flex items-center gap-1.5">
+          <i data-lucide="history" class="w-4 h-4 text-indigo-500"></i> 스터디 수정 내역
+        </h3>
+        <button id="btn-gh-close" type="button" class="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div id="gh-list" class="flex-1 overflow-y-auto custom-scroll divide-y divide-slate-100 dark:divide-slate-800 px-4 py-2"></div>
     </div>
   </div>
 
@@ -2323,6 +2408,7 @@
                 <div class="flex items-center gap-1.5">
                   <button type="button" data-fork-card="${card.id}" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition">내 덱으로 복사</button>
                   <button type="button" data-edit-card="${card.id}" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">편집</button>
+                  ${(card.author === CURRENT_USER || isGroupOwner(group)) ? `<button type="button" data-unshare-card="${card.id}" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold transition" title="스터디 공유에서 삭제">공유 삭제</button>` : ''}
                 </div>
               </div>
             </div>
@@ -2563,7 +2649,7 @@
 
       function renderCommentsList(card) {
         const list = document.getElementById('comments-list');
-        const comments = card.comments || [];
+        const comments = (card.comments || []).filter(cm => cm.type !== 'history');
         if (!comments.length) {
           list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">아직 댓글이나 수정 제안이 없습니다. 첫 번째 암기 팁을 남겨보세요!</div>`;
           return;
@@ -2621,6 +2707,11 @@
           ui.filterProf !== 'all' ? ui.filterProf : null,
           ui.filterChapter !== 'all' ? ui.filterChapter : null
         );
+        const apkgShareSel = document.getElementById('apkg-share-group');
+        if (apkgShareSel) {
+          apkgShareSel.innerHTML = `<option value="">나만 보기 (공유 안 함)</option>` +
+            state.groups.map(g => `<option value="${g.id}" ${g.id === ui.activeGroupId ? 'selected' : ''}>스터디 공유: ${escapeHtml(g.name)} (${g.inviteCode})</option>`).join('');
+        }
         document.getElementById('apkg-status-text').textContent = '빈칸(Cloze), 태그, 이미지 포함 덱 지원 (.anki2 / .anki21)';
         document.getElementById('export-code-box').value = '';
         document.getElementById('import-code-box').value = '';
@@ -2992,6 +3083,7 @@
         const keepHtml = document.getElementById('apkg-keep-html').checked;
 
         let importedCount = 0;
+        const importedSharedCards = [];
         let firstImportedSub = null;
 
         pendingApkg.notes.forEach(n => {
@@ -3015,7 +3107,8 @@
           if (!firstImportedSub) firstImportedSub = target.subjectId;
           const tags = n.tags ? n.tags.split(/\s+/).filter(Boolean) : ['Anki가져오기'];
 
-          state.cards.unshift({
+          const chosenShareGrp = document.getElementById('apkg-share-group')?.value || '';
+          const newCardObj = {
             id: uid('c'),
             subjectId: target.subjectId,
             profId: target.profId,
@@ -3025,12 +3118,14 @@
             profNote: '',
             tags,
             starred: false,
-            sharedGroupId: '',
-            author: `${CURRENT_USER} (Anki)`,
+            sharedGroupId: chosenShareGrp,
+            author: CURRENT_USER,
             likes: 0,
             srs: { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
             comments: []
-          });
+          };
+          state.cards.unshift(newCardObj);
+          if (chosenShareGrp) importedSharedCards.push(newCardObj);
           importedCount++;
         });
 
@@ -3048,7 +3143,14 @@
         }
         saveState();
         renderAll();
-        showToast(`Anki(.apkg)에서 ${importedCount}장의 카드를 깔끔하게 불러왔습니다!`, 'success');
+        if (importedSharedCards.length > 0 && sbConnected) {
+          showToast(`${importedCount}장 불러옴! 스터디 서버에 실시간 업로드 중...`, 'success');
+          syncUpsertCards(importedSharedCards).then(() => {
+            showToast(`${importedSharedCards.length}장이 스터디원들에게 실시간 공유되었습니다!`, 'success');
+          });
+        } else {
+          showToast(`Anki(.apkg)에서 ${importedCount}장의 카드를 깔끔하게 불러왔습니다!`, 'success');
+        }
       }
 
       // ================= TAXONOMY RENAME / MOVE / QUICK-ADD MODAL =================
@@ -3447,6 +3549,7 @@
       // ================= SUPABASE AUTH & REAL-TIME SYNC =================
       let sbClient = null;
       let sbChannel = null;
+      let sbGroupChannel = null;
       let sbConfig = loadSyncConfig();
       let sbConnected = false;
       let sbUser = null;
@@ -3611,21 +3714,41 @@
         }
       }
 
-      async function syncUpsertCards(cardsArr) {
-        if (!sbConnected || !sbClient || !cardsArr || !cardsArr.length) return;
+      async function syncUpsertCards(cardsArr, onProgress) {
+        if (!sbClient && sbConfig.url && sbConfig.key) {
+          try { ensureSupabaseClient(); } catch (e) {}
+        }
+        if (!sbClient || !cardsArr || !cardsArr.length) return false;
         try {
           const rows = cardsArr.map(cardToSupabaseRow);
-          const { error } = await sbClient.from('mc_cards').upsert(rows, { onConflict: 'id' });
-          if (error) showToast('실시간 저장 오류: ' + error.message, 'error');
+          const chunkSize = 20;
+          for (let i = 0; i < rows.length; i += chunkSize) {
+            const batch = rows.slice(i, i + chunkSize);
+            const { error } = await sbClient.from('mc_cards').upsert(batch, { onConflict: 'id' });
+            if (error) {
+              showToast('실시간 저장 오류: ' + error.message, 'error');
+              return false;
+            }
+            if (onProgress) onProgress(Math.min(rows.length, i + batch.length), rows.length);
+          }
+          return true;
         } catch (e) {
           showToast('실시간 동기화 전송 실패: 네트워크를 확인해 주세요.', 'error');
+          return false;
         }
       }
 
       async function syncDeleteCards(cardIds) {
-        if (!sbConnected || !sbClient || !cardIds || !cardIds.length) return;
+        if (!sbClient && sbConfig.url && sbConfig.key) {
+          try { ensureSupabaseClient(); } catch (e) {}
+        }
+        if (!sbClient || !cardIds || !cardIds.length) return;
         try {
-          await sbClient.from('mc_cards').delete().in('id', cardIds).eq('room_code', sbConfig.room);
+          const chunkSize = 40;
+          for (let i = 0; i < cardIds.length; i += chunkSize) {
+            const batch = cardIds.slice(i, i + chunkSize);
+            await sbClient.from('mc_cards').delete().in('id', batch).eq('room_code', sbConfig.room);
+          }
         } catch (e) {}
       }
 
@@ -3790,6 +3913,89 @@
         showToast('로그아웃되었습니다.');
       }
 
+      function applyRemoteGroupRow(row) {
+        if (!row || !row.room_code) return null;
+        let g = state.groups.find(x => x.inviteCode === row.room_code);
+        const remoteMembers = Array.isArray(row.members) ? row.members : [];
+        if (!g) {
+          g = {
+            id: uid('grp'),
+            name: row.name || `스터디 (${row.room_code})`,
+            desc: row.description || '실시간 동기화로 연결된 스터디 공간입니다.',
+            inviteCode: row.room_code,
+            ownerStudentId: row.owner_student_id || null,
+            members: remoteMembers
+          };
+          state.groups.push(g);
+        } else {
+          if (row.name) g.name = row.name;
+          if (row.description !== undefined) g.desc = row.description;
+          if (row.owner_student_id) g.ownerStudentId = row.owner_student_id;
+          if (remoteMembers.length) g.members = remoteMembers;
+        }
+        return g;
+      }
+
+      async function syncGroupMetadataAndJoin(roomCode, localGroupIfCreating) {
+        if (!sbConfig.url || !sbConfig.key || !roomCode) return null;
+        try {
+          const client = ensureSupabaseClient();
+          const { data: existing, error } = await client
+            .from('mc_groups')
+            .select('*')
+            .eq('room_code', roomCode)
+            .maybeSingle();
+          if (error) return null;
+
+          const mySid = sbConfig.studentId || CURRENT_USER;
+          const myEntry = {
+            studentId: mySid,
+            name: CURRENT_USER,
+            reviewed: state.todayReviewed || 0,
+            streak: 1,
+            role: '멤버'
+          };
+
+          if (existing) {
+            const members = Array.isArray(existing.members) ? [...existing.members] : [];
+            const idx = members.findIndex(m => (m.studentId && m.studentId === mySid) || m.name === CURRENT_USER);
+            if (idx >= 0) {
+              members[idx] = { ...members[idx], name: CURRENT_USER, reviewed: state.todayReviewed || members[idx].reviewed || 0 };
+            } else {
+              if (existing.owner_student_id && existing.owner_student_id === mySid) myEntry.role = '방장';
+              members.push(myEntry);
+            }
+            const { data: updated } = await client
+              .from('mc_groups')
+              .update({ members, updated_at: new Date().toISOString() })
+              .eq('room_code', roomCode)
+              .select()
+              .single();
+            return applyRemoteGroupRow(updated || { ...existing, members });
+          } else if (localGroupIfCreating) {
+            myEntry.role = '방장';
+            const row = {
+              room_code: roomCode,
+              name: localGroupIfCreating.name,
+              description: localGroupIfCreating.desc || '',
+              owner_student_id: mySid,
+              owner_name: CURRENT_USER,
+              members: [myEntry],
+              updated_at: new Date().toISOString()
+            };
+            const { data: inserted } = await client
+              .from('mc_groups')
+              .upsert(row, { onConflict: 'room_code' })
+              .select()
+              .single();
+            return applyRemoteGroupRow(inserted || row);
+          }
+          return null;
+        } catch (e) {
+          return null;
+        }
+      }
+
       async function connectSupabase(isAuto) {
         const room = sbConfig.room.trim();
         if (!room) {
@@ -3812,9 +4018,26 @@
             sbChannel = null;
           }
 
-          const activeGrp = ensureGroupForRoomCode(room, sbConfig.invitedGroupName || null);
+          const localGrp = state.groups.find(x => x.inviteCode === room);
+          const syncedGrp = await syncGroupMetadataAndJoin(room, localGrp || null);
+          const activeGrp = syncedGrp || ensureGroupForRoomCode(room, sbConfig.invitedGroupName || null);
           ui.activeGroupId = activeGrp.id;
           sbConfig.invitedGroupName = '';
+
+          if (sbGroupChannel) {
+            try { await client.removeChannel(sbGroupChannel); } catch (e) {}
+            sbGroupChannel = null;
+          }
+          sbGroupChannel = client
+            .channel('mc_group_meta_' + room)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'mc_groups', filter: `room_code=eq.${room}` }, payload => {
+              if (payload.new) {
+                applyRemoteGroupRow(payload.new);
+                saveState();
+                renderAll();
+              }
+            })
+            .subscribe();
 
           const { data, error } = await client
             .from('mc_cards')
@@ -4686,6 +4909,19 @@
           }
           const edit = e.target.closest('[data-edit-card]');
           if (edit) { openEditorModal(edit.dataset.editCard); return; }
+          const unshare = e.target.closest('[data-unshare-card]');
+          if (unshare) {
+            const c = state.cards.find(x => x.id === unshare.dataset.unshareCard);
+            const g = state.groups.find(x => x.id === ui.activeGroupId);
+            if (c && (c.author === CURRENT_USER || isGroupOwner(g))) {
+              c.sharedGroupId = '';
+              saveState();
+              syncDeleteCards([c.id]);
+              renderAll();
+              showToast('해당 카드를 스터디 공유에서 삭제했습니다 (내 카드함에는 유지됩니다).');
+            }
+            return;
+          }
           const cm = e.target.closest('[data-comment-card]');
           if (cm) { openCommentsDrawer(cm.dataset.commentCard); }
         });
@@ -5019,7 +5255,7 @@
           m.classList.add('hidden'); m.classList.remove('flex');
           saveState();
           if (sbConfig.url && sbConfig.key) {
-            connectSupabase(true);
+            syncGroupMetadataAndJoin(ng.inviteCode, ng).then(() => connectSupabase(true));
           }
           renderAll();
           showToast(`"${name}" 스터디(${ng.inviteCode})가 생성되어 실시간 방으로 연결되었습니다!`, 'success');
@@ -5055,6 +5291,214 @@
           }
         });
 
+        const getSelectedPushCards = () => {
+          const sId = document.getElementById('pd-subject').value;
+          const pId = document.getElementById('pd-prof').value;
+          const cId = document.getElementById('pd-chapter').value;
+          return state.cards.filter(c => {
+            if (sId !== 'all' && c.subjectId !== sId) return false;
+            if (pId !== 'all' && c.profId !== pId) return false;
+            if (cId !== 'all' && c.chapterId !== cId) return false;
+            return true;
+          });
+        };
+        const syncPushDeckSelects = () => {
+          const sSel = document.getElementById('pd-subject');
+          const pSel = document.getElementById('pd-prof');
+          const cSel = document.getElementById('pd-chapter');
+          const sVal = sSel.value || 'all';
+          const profs = sVal === 'all' ? state.taxonomy.flatMap(s => s.professors) : (getSubject(sVal)?.professors || []);
+          const prevP = pSel.value || 'all';
+          pSel.innerHTML = `<option value="all">모든 교수님</option>` + profs.map(p => `<option value="${p.id}" ${p.id === prevP ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
+          const pVal = pSel.value || 'all';
+          let chaps = [];
+          if (sVal !== 'all' && pVal !== 'all') chaps = getProf(sVal, pVal)?.chapters || [];
+          else if (sVal !== 'all') chaps = (getSubject(sVal)?.professors || []).flatMap(p => p.chapters);
+          else chaps = state.taxonomy.flatMap(s => s.professors.flatMap(p => p.chapters));
+          const prevC = cSel.value || 'all';
+          cSel.innerHTML = `<option value="all">모든 단원</option>` + chaps.map(ch => `<option value="${ch.id}" ${ch.id === prevC ? 'selected' : ''}>${escapeHtml(ch.name)}</option>`).join('');
+          const matched = getSelectedPushCards();
+          document.getElementById('pd-count-preview').textContent = `총 ${matched.length}장의 카드가 스터디원 전원에게 실시간 공유됩니다.`;
+        };
+        document.getElementById('btn-push-deck-to-group').addEventListener('click', () => {
+          const g = state.groups.find(x => x.id === ui.activeGroupId);
+          if (!g) { showToast('먼저 스터디를 만들거나 참여해 주세요.', 'error'); return; }
+          if (!state.cards.length) { showToast('올릴 카드가 없습니다. 먼저 카드를 만들거나 .apkg를 불러와 주세요.', 'error'); return; }
+          document.getElementById('pd-target-desc').textContent = `선택한 덱을 "${g.name}" (${g.inviteCode}) 스터디에 올립니다. 팀원들이 바로 보고 수정할 수 있습니다.`;
+          document.getElementById('pd-subject').innerHTML = `<option value="all">전체 과목 (${state.cards.length}장)</option>` +
+            state.taxonomy.map(sub => `<option value="${sub.id}">${escapeHtml(sub.name)} (${state.cards.filter(c => c.subjectId === sub.id).length}장)</option>`).join('');
+          document.getElementById('pd-prof').value = 'all';
+          document.getElementById('pd-chapter').value = 'all';
+          document.getElementById('pd-progress').classList.add('hidden');
+          syncPushDeckSelects();
+          const m = document.getElementById('modal-push-deck');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          if (window.lucide) lucide.createIcons();
+        });
+        ['pd-subject', 'pd-prof', 'pd-chapter'].forEach(id => {
+          document.getElementById(id).addEventListener('change', syncPushDeckSelects);
+        });
+        const closePushModal = () => {
+          const m = document.getElementById('modal-push-deck');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        };
+        document.getElementById('btn-pd-close').addEventListener('click', closePushModal);
+        document.getElementById('btn-pd-cancel').addEventListener('click', closePushModal);
+        document.getElementById('btn-pd-submit').addEventListener('click', async () => {
+          const g = state.groups.find(x => x.id === ui.activeGroupId);
+          if (!g) return;
+          const cardsToShare = getSelectedPushCards();
+          if (!cardsToShare.length) { showToast('선택한 범위에 카드가 없습니다.', 'error'); return; }
+          const progEl = document.getElementById('pd-progress');
+          const submitBtn = document.getElementById('btn-pd-submit');
+          submitBtn.disabled = true;
+          progEl.classList.remove('hidden');
+          progEl.textContent = `0 / ${cardsToShare.length}장 업로드 중...`;
+
+          cardsToShare.forEach(c => { c.sharedGroupId = g.id; });
+          saveState();
+          const ok = await syncUpsertCards(cardsToShare, (done, total) => {
+            progEl.textContent = `${done} / ${total}장 실시간 업로드 중...`;
+          });
+          submitBtn.disabled = false;
+          closePushModal();
+          renderAll();
+          if (ok) {
+            showToast(`"${g.name}" 스터디에 ${cardsToShare.length}장을 실시간 공유했습니다!`, 'success');
+          }
+        });
+        document.getElementById('btn-study-group-now').addEventListener('click', () => {
+          const gCards = state.cards.filter(c => c.sharedGroupId === ui.activeGroupId);
+          if (!gCards.length) { showToast('이 스터디에 공유된 카드가 아직 없습니다.', 'error'); return; }
+          ui.studyScope = 'filtered';
+          ui.studyQueue = gCards.map(c => c.id);
+          ui.studyIndex = 0;
+          ui.studyFlipped = false;
+          ui.sessionWaitingMap = new Map();
+          ui.activeTab = 'study';
+          renderAll();
+        });
+        const getMyUploadedInCurrentGroup = () => {
+          return state.cards.filter(c => {
+            if (c.sharedGroupId !== ui.activeGroupId) return false;
+            if (c.author !== CURRENT_USER) return false;
+            if (ui.sharedFilterChapter !== 'all' && c.chapterId !== ui.sharedFilterChapter) return false;
+            return true;
+          });
+        };
+        const renderGroupHistoryModal = () => {
+          const listEl = document.getElementById('gh-list');
+          const stripPlain = str => String(str || '').replace(/^__HTML__/, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          const entries = [];
+          state.cards
+            .filter(c => c.sharedGroupId === ui.activeGroupId)
+            .forEach(card => {
+              (card.comments || []).forEach(cm => {
+                if (cm.type === 'history') entries.push({ card, cm });
+              });
+            });
+          if (!entries.length) {
+            listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">아직 수정 내역이 없습니다.</div>';
+            return;
+          }
+          listEl.innerHTML = entries.slice(0, 40).map(({ card, cm }) => {
+            const beforeTxt = stripPlain(cm.changedFront ? cm.beforeFront : cm.beforeBack).slice(0, 32) || '(빈칸)';
+            const afterTxt = stripPlain(cm.changedFront ? cm.afterFront : cm.afterBack).slice(0, 32) || '(빈칸)';
+            return `
+              <div class="py-2.5 flex items-start justify-between gap-2 text-[11px]">
+                <div class="min-w-0 space-y-0.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(cm.author)}</span>
+                    <span class="text-[10px] text-slate-400 shrink-0">${escapeHtml(cm.createdAt)}</span>
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400 truncate">
+                    <span class="line-through text-rose-500">${escapeHtml(beforeTxt)}</span>
+                    <span class="mx-1">→</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold">${escapeHtml(afterTxt)}</span>
+                  </div>
+                </div>
+                <button type="button" data-gh-rollback="${card.id}|${cm.id}" class="shrink-0 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 text-[10px] font-bold text-indigo-600 dark:text-indigo-300">되돌리기</button>
+              </div>
+            `;
+          }).join('');
+        };
+        document.getElementById('btn-open-group-history').addEventListener('click', () => {
+          renderGroupHistoryModal();
+          const m = document.getElementById('modal-group-history');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          if (window.lucide) lucide.createIcons();
+        });
+        document.getElementById('btn-gh-close').addEventListener('click', () => {
+          const m = document.getElementById('modal-group-history');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('modal-group-history').addEventListener('click', e => {
+          if (e.target.id === 'modal-group-history') {
+            e.target.classList.add('hidden'); e.target.classList.remove('flex');
+          }
+        });
+        document.getElementById('gh-list').addEventListener('click', e => {
+          const rb = e.target.closest('[data-gh-rollback]');
+          if (!rb) return;
+          const [cardId, histId] = rb.dataset.ghRollback.split('|');
+          const card = state.cards.find(c => c.id === cardId);
+          const h = card?.comments?.find(x => x.id === histId);
+          if (card && h) {
+            const nowD = new Date();
+            const stamp = `${nowD.getMonth() + 1}/${nowD.getDate()} ${String(nowD.getHours()).padStart(2, '0')}:${String(nowD.getMinutes()).padStart(2, '0')}`;
+            const prevF = card.front;
+            const prevB = card.back;
+            card.front = h.beforeFront;
+            card.back = h.beforeBack;
+            card.lastEditedBy = CURRENT_USER;
+            card.comments.unshift({
+              id: uid('hist'),
+              author: CURRENT_USER,
+              type: 'history',
+              createdAt: stamp,
+              changedFront: prevF !== card.front,
+              changedBack: prevB !== card.back,
+              beforeFront: prevF,
+              afterFront: card.front,
+              beforeBack: prevB,
+              afterBack: card.back,
+              text: '이전 버전으로 되돌림'
+            });
+            saveState();
+            syncUpsertCards([card]);
+            renderGroupHistoryModal();
+            renderAll();
+            showToast('이전 버전으로 되돌렸습니다!', 'success');
+          }
+        });
+        document.getElementById('btn-unshare-my-cards').addEventListener('click', () => {
+          const mine = getMyUploadedInCurrentGroup();
+          if (!mine.length) {
+            showToast('현재 필터 범위에서 내가 이 스터디에 올린 카드가 없습니다.');
+            return;
+          }
+          const chapLabel = ui.sharedFilterChapter === 'all' ? '전체 단원' : '선택한 단원';
+          document.getElementById('um-desc').textContent =
+            `${chapLabel}에서 내가 이 스터디에 올린 카드 ${mine.length}장을 스터디 공유에서 모두 내릴까요? (내 개인 카드함에는 그대로 안전하게 유지됩니다.)`;
+          const m = document.getElementById('modal-unshare-mine');
+          m.classList.remove('hidden'); m.classList.add('flex');
+          if (window.lucide) lucide.createIcons();
+        });
+        document.getElementById('btn-um-cancel').addEventListener('click', () => {
+          const m = document.getElementById('modal-unshare-mine');
+          m.classList.add('hidden'); m.classList.remove('flex');
+        });
+        document.getElementById('btn-um-confirm').addEventListener('click', async () => {
+          const mine = getMyUploadedInCurrentGroup();
+          const ids = mine.map(c => c.id);
+          mine.forEach(c => { c.sharedGroupId = ''; });
+          saveState();
+          const m = document.getElementById('modal-unshare-mine');
+          m.classList.add('hidden'); m.classList.remove('flex');
+          if (ids.length) await syncDeleteCards(ids);
+          renderAll();
+          showToast(`내가 올린 카드 ${ids.length}장을 스터디에서 모두 내렸습니다.`, 'success');
+        });
         document.getElementById('btn-fork-all-group').addEventListener('click', () => {
           const gCards = state.cards.filter(c => c.sharedGroupId === ui.activeGroupId && c.author !== CURRENT_USER);
           if (!gCards.length) { showToast('복사할 스터디원 카드가 없습니다.'); return; }
@@ -5151,10 +5595,20 @@
         document.getElementById('btn-gen-share-code').addEventListener('click', () => {
           const payload = buildExportPayload();
           const jsonStr = JSON.stringify(payload);
-          const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
-          const code = 'MCDECK:' + encoded;
-          document.getElementById('export-code-box').value = code;
-          copyToClipboard(code, `${payload.cards.length}장 덱 공유 코드가 복사되었습니다!`);
+          if (jsonStr.length > 180000) {
+            showToast('사진이 포함된 대용량 덱은 코드 복사 대신 [스터디 공유 → 내 덱 이 스터디에 올리기] 또는 [JSON 파일 다운로드]를 이용해 주세요!', 'error');
+            return;
+          }
+          try {
+            const bytes = new TextEncoder().encode(jsonStr);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+            const code = 'MCDECK:' + btoa(bin);
+            document.getElementById('export-code-box').value = code;
+            copyToClipboard(code, `${payload.cards.length}장 덱 공유 코드가 복사되었습니다!`);
+          } catch (err) {
+            showToast('코드 생성에 실패했습니다. [JSON 파일 다운로드]를 이용해 주세요.', 'error');
+          }
         });
         document.getElementById('btn-download-json').addEventListener('click', () => {
           const payload = buildExportPayload();
@@ -5175,11 +5629,15 @@
           try {
             let jsonStr = raw;
             if (raw.startsWith('MCDECK:')) {
-              jsonStr = decodeURIComponent(escape(atob(raw.slice(7))));
+              const cleanB64 = raw.slice(7).replace(/\s+/g, '');
+              const bin = atob(cleanB64);
+              const bytes = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+              jsonStr = new TextDecoder().decode(bytes);
             }
             importPayload(JSON.parse(jsonStr));
           } catch (err) {
-            showToast('코드 해석에 실패했습니다. 전체 코드가 올바르게 복사되었는지 확인해 주세요.', 'error');
+            showToast('코드가 길어 잘렸거나 형식이 맞지 않습니다. 대용량 덱은 스터디에 직접 올리거나 JSON 파일로 공유해 주세요.', 'error');
           }
         });
         document.getElementById('apkg-subject').addEventListener('change', e => populateCascadeSelects('apkg-subject', 'apkg-prof', 'apkg-chapter', e.target.value, null, null));
