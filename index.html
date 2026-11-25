@@ -118,7 +118,7 @@
         </div>
         <div>
           <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">MemoCraft 시작하기</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">이름과 학번만 입력하면 바로 입장하며, 다음부터는 자동 로그인됩니다.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-keep">이름과 학번만 입력하면 바로 입장하며, 다음부터는 자동 로그인됩니다.</p>
         </div>
       </div>
 
@@ -1096,6 +1096,7 @@
         <div>
           <label class="block text-xs font-bold text-slate-500 mb-1">스터디 초대 코드 <span class="text-rose-500">*</span></label>
           <input id="jg-code" type="text" placeholder="예: MC-ABCD-2026" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm font-mono font-bold uppercase" />
+          <p id="jg-error" class="hidden mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-400"></p>
         </div>
       </div>
       <div class="flex justify-end gap-2">
@@ -1383,22 +1384,28 @@
           dailyGoal: 20,
           weeklyReviews: [0, 0, 0, 0, 0, 0, 0],
           taxonomy: [],
-          groups: [
-            {
-              id: 'grp_default',
-              name: '내 스터디 그룹',
-              desc: '스터디원과 카드를 공유하고 함께 복습하는 공간입니다.',
-              inviteCode: 'MC-STUDY-2026',
-              members: [
-                { name: CURRENT_USER, reviewed: 0, streak: 1, role: '방장' }
-              ]
-            }
-          ],
+          groups: [],
           cards: []
         };
       }
 
-      let state = loadState();
+      function getAccountKey() {
+        if (typeof sbConfig === 'undefined' || !sbConfig) return '';
+        const nm = (sbConfig.name || '').trim();
+        const sid = (sbConfig.studentId || '').trim();
+        if (!nm || !sid) return '';
+        return `${nm}__${sid}`;
+      }
+      function getAccountStorageKey() {
+        const ak = getAccountKey();
+        return ak ? `memocraft_acct_v3_${encodeURIComponent(ak)}` : '';
+      }
+      function getPersonalRoomCode() {
+        const ak = getAccountKey();
+        return ak ? `PERSONAL::${ak}` : '';
+      }
+
+      let state = getDefaultState();
       let ui = {
         activeTab: 'library',
         quickFilter: 'all', // all | due | starred | shared
@@ -1429,38 +1436,27 @@
 
 
       function loadState() {
+        const key = getAccountStorageKey();
+        if (!key) return getDefaultState();
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(key);
           if (raw) {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.taxonomy) && Array.isArray(parsed.cards)) {
-              if (!parsed.sampleCleaned) {
-                const sampleSubs = new Set(['sub_physio', 'sub_algo', 'sub_econ']);
-                const sampleCards = new Set(['c_1', 'c_2', 'c_3', 'c_4', 'c_5', 'c_6', 'c_7', 'c_8']);
-                parsed.taxonomy = parsed.taxonomy.filter(sub => !sampleSubs.has(sub.id));
-                parsed.cards = parsed.cards.filter(c => !sampleCards.has(c.id) && !sampleSubs.has(c.subjectId));
-                parsed.groups = (parsed.groups || []).filter(g => g.id !== 'grp_med' && g.id !== 'grp_cs');
-                if (!parsed.groups.length) {
-                  parsed.groups = [{ id: 'grp_default', name: '내 스터디 그룹', desc: '스터디원과 카드를 공유하고 함께 복습하는 공간입니다.', inviteCode: 'MC-STUDY-2026', members: [{ name: CURRENT_USER, reviewed: 0, streak: 1, role: '방장' }] }];
-                }
-                parsed.sampleCleaned = true;
-                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); } catch (e) {}
-              }
+              parsed.groups = (parsed.groups || []).filter(g => g.id !== 'grp_default' && g.inviteCode !== 'MC-STUDY-2026');
               return parsed;
             }
           }
-        } catch (e) {
-          // ignore storage errors in restricted sandboxes
-        }
+        } catch (e) {}
         return getDefaultState();
       }
 
       function saveState() {
+        const key = getAccountStorageKey();
+        if (!key) return;
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (e) {
-          // ignore storage errors
-        }
+          localStorage.setItem(key, JSON.stringify(state));
+        } catch (e) {}
       }
 
       function uid(prefix) {
@@ -1696,7 +1692,7 @@
       }
 
       function renderNav() {
-        const dueCount = state.cards.filter(isDue).length;
+        const dueCount = state.cards.filter(c => !c.studyOnly && isDue(c)).length;
         document.getElementById('nav-due-badge').textContent = dueCount;
 
         document.querySelectorAll('.nav-tab').forEach(btn => {
@@ -1745,7 +1741,7 @@
           return;
         }
         tree.innerHTML = state.taxonomy.map(sub => {
-          const subCards = state.cards.filter(c => c.subjectId === sub.id);
+          const subCards = myPersonalCards.filter(c => c.subjectId === sub.id);
           const subDue = subCards.filter(isDue).length;
           const isExpSub = ui.expandedSubjects.has(sub.id);
           const isSelSub = ui.filterSubject === sub.id && ui.filterProf === 'all';
@@ -2020,10 +2016,11 @@
       function buildStudyQueue(scope) {
         ui.studyScope = scope || ui.studyScope;
         let pool = [];
-        if (ui.studyScope === 'due') pool = state.cards.filter(isDue);
+        const personalPool = state.cards.filter(c => !c.studyOnly);
+        if (ui.studyScope === 'due') pool = personalPool.filter(isDue);
         else if (ui.studyScope === 'filtered') pool = getFilteredCards();
-        else if (ui.studyScope === 'starred') pool = state.cards.filter(c => c.starred);
-        else pool = [...state.cards];
+        else if (ui.studyScope === 'starred') pool = personalPool.filter(c => c.starred);
+        else pool = [...personalPool];
 
         ui.studyQueue = pool.map(c => c.id);
         ui.studyIndex = 0;
@@ -2265,6 +2262,7 @@
 
         saveState();
         syncSaveUserProgress(card);
+        if (!card.studyOnly) syncPersonalUpsert([card]);
 
         const hasWaiting = getShortTermWaitingCards().length > 0;
         if (ui.studyIndex >= ui.studyQueue.length && !hasWaiting && window.confetti) {
@@ -2318,11 +2316,19 @@
         const delBtn = document.getElementById('btn-delete-group');
         if (!group) {
           document.getElementById('group-switcher').innerHTML = '<option value="">참여 중인 스터디 없음</option>';
-          document.getElementById('group-title').textContent = '참여 중인 스터디가 없습니다';
-          document.getElementById('group-desc').textContent = '우측의 [새 스터디] 또는 [코드로 참여] 버튼으로 스터디를 시작해 보세요.';
+          document.getElementById('group-title').textContent = '스터디를 만들거나 참가해 보세요';
+          document.getElementById('group-desc').textContent = '아직 참여 중인 스터디가 없습니다. [새 스터디]로 방을 만들거나 [코드로 참여]로 친구 스터디에 들어가 보세요.';
           document.getElementById('group-member-count').textContent = '0명';
-          document.getElementById('group-members-list').innerHTML = '<p class="text-xs text-slate-400">스터디에 참여하면 멤버 현황이 표시됩니다.</p>';
-          document.getElementById('shared-cards-list').innerHTML = '<div class="col-span-full bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 text-center text-sm text-slate-500">참여 중인 스터디가 없습니다.</div>';
+          document.getElementById('group-members-list').innerHTML = '<p class="text-xs text-slate-400">스터디에 참가하면 멤버 현황이 표시됩니다.</p>';
+          document.getElementById('shared-cards-list').innerHTML = `
+            <div class="col-span-full bg-white dark:bg-slate-900 border border-dashed border-indigo-300 dark:border-indigo-800 rounded-2xl p-10 text-center space-y-3">
+              <div class="text-base font-extrabold text-slate-800 dark:text-slate-100">아직 참여 중인 스터디가 없습니다</div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">스터디를 새로 만들거나, 스터디원에게 받은 초대 코드를 입력해 참가해 보세요!</p>
+              <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('btn-create-group').click()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition">+ 새 스터디 만들기</button>
+                <button type="button" onclick="document.getElementById('btn-join-group').click()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">→ 초대 코드로 참가하기</button>
+              </div>
+            </div>`;
           if (delBtn) delBtn.classList.add('hidden');
           return;
         }
@@ -3323,6 +3329,10 @@
         }
         saveState();
         renderAll();
+        if (saveMine) {
+          const personalImported = state.cards.slice(0, importedCount).filter(c => !c.studyOnly);
+          syncPersonalUpsert(personalImported);
+        }
         if (importedSharedCards.length > 0 && sbConnected) {
           const msg = saveMine
             ? `${importedCount}장을 내 덱에 저장하고 스터디에 업로드 중...`
@@ -3643,7 +3653,7 @@
         }
 
         saveState();
-        if (deletedCardIds.length) syncDeleteCards(deletedCardIds);
+        if (deletedCardIds.length) { syncPersonalDelete(deletedCardIds); syncDeleteCards(deletedCardIds); }
         const delName = m.name;
         closeTreeContextMenu();
         renderAll();
@@ -3743,6 +3753,7 @@
       let sbClient = null;
       let sbChannel = null;
       let sbGroupChannel = null;
+      let sbPersonalChannel = null;
       let sbConfig = loadSyncConfig();
       let sbConnected = false;
       let sbUser = null;
@@ -3750,7 +3761,7 @@
 
       function loadSyncConfig() {
         const embedded = window.MEMOCRAFT_CONFIG || {};
-        let cfg = { url: embedded.url || 'https://xxsfsopzmomhxdrmvtps.supabase.co', key: embedded.key || '', room: 'MC-STUDY-2026', nickname: '', name: '', studentId: '', loggedIn: false, autoConnect: false };
+        let cfg = { url: embedded.url || 'https://xxsfsopzmomhxdrmvtps.supabase.co', key: embedded.key || '', room: '', nickname: '', name: '', studentId: '', loggedIn: false, autoConnect: false };
         try {
           const raw = localStorage.getItem(SYNC_KEY);
           if (raw) {
@@ -3898,6 +3909,7 @@
             tags: Array.isArray(row.tags) ? row.tags : [],
             starred: !!row.starred,
             sharedGroupId: ensureGroupForRoomCode(row.room_code || sbConfig.room).id,
+            studyOnly: (row.author && row.author !== CURRENT_USER) ? true : false,
             author: row.author || '스터디원',
             updatedAt: row.updated_at || new Date().toISOString(),
             sharedAt: row.updated_at || new Date().toISOString(),
@@ -3908,6 +3920,204 @@
           if (notify && row.updated_by && row.updated_by !== CURRENT_USER) {
             showToast(`✨ ${row.updated_by}님이 새 카드를 공유했습니다.`, 'success');
           }
+        }
+      }
+
+      function personalRowId(localCardId) {
+        const ak = getAccountKey();
+        return `pers::${ak}::${localCardId}`;
+      }
+
+      function cardToPersonalRow(card) {
+        const sub = getSubject(card.subjectId);
+        const prof = getProf(card.subjectId, card.profId);
+        const chap = getChapter(card.subjectId, card.profId, card.chapterId);
+        const visibleComments = (card.comments || []).filter(c => c && c.type !== '__mc_meta');
+        const meta = {
+          type: '__mc_meta',
+          localId: card.id,
+          color: sub?.color || 'indigo',
+          srs: card.srs || { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
+          forkedFromId: card.forkedFromId || ''
+        };
+        return {
+          id: personalRowId(card.id),
+          room_code: getPersonalRoomCode(),
+          subject_name: sub?.name || '미분류',
+          prof_name: prof?.name || '담당 교수',
+          chapter_name: chap?.name || '1장',
+          front: card.front,
+          back: card.back || '',
+          tags: card.tags || [],
+          starred: !!card.starred,
+          author: card.author || CURRENT_USER,
+          updated_by: CURRENT_USER,
+          comments: [...visibleComments, meta],
+          updated_at: card.updatedAt || new Date().toISOString()
+        };
+      }
+
+      function applyPersonalRowToLocal(row) {
+        if (!row || !row.id) return;
+        const rawComments = Array.isArray(row.comments) ? row.comments : [];
+        const meta = rawComments.find(x => x && x.type === '__mc_meta') || {};
+        const visibleComments = rawComments.filter(x => x && x.type !== '__mc_meta');
+        const localId = meta.localId || row.id.split('::').pop();
+        const tax = ensureTaxonomyPath(row.subject_name || '미분류', row.prof_name || '담당 교수', row.chapter_name || '1장');
+        const sub = getSubject(tax.subjectId);
+        if (sub && meta.color && COLOR_MAP[meta.color]) sub.color = meta.color;
+
+        const existing = state.cards.find(c => !c.studyOnly && c.id === localId);
+        if (existing) {
+          existing.subjectId = tax.subjectId;
+          existing.profId = tax.profId;
+          existing.chapterId = tax.chapterId;
+          existing.front = row.front;
+          existing.back = row.back || '';
+          existing.tags = Array.isArray(row.tags) ? row.tags : [];
+          existing.starred = !!row.starred;
+          existing.comments = visibleComments;
+          if (meta.srs) existing.srs = meta.srs;
+          if (meta.forkedFromId) existing.forkedFromId = meta.forkedFromId;
+          existing.updatedAt = row.updated_at || existing.updatedAt;
+        } else {
+          state.cards.unshift({
+            id: localId,
+            subjectId: tax.subjectId,
+            profId: tax.profId,
+            chapterId: tax.chapterId,
+            front: row.front,
+            back: row.back || '',
+            profNote: '',
+            tags: Array.isArray(row.tags) ? row.tags : [],
+            starred: !!row.starred,
+            sharedGroupId: '',
+            studyOnly: false,
+            forkedFromId: meta.forkedFromId || '',
+            author: row.author || CURRENT_USER,
+            updatedAt: row.updated_at || new Date().toISOString(),
+            likes: 0,
+            srs: meta.srs || { reps: 0, intervalDays: 0, ease: 2.5, dueAt: nowMs(), lastResult: null },
+            comments: visibleComments
+          });
+        }
+      }
+
+      async function syncPersonalUpsert(cardsArr) {
+        const pRoom = getPersonalRoomCode();
+        if (!pRoom || !sbConfig.url || !sbConfig.key || !cardsArr || !cardsArr.length) return;
+        const personalOnly = cardsArr.filter(c => c && !c.studyOnly);
+        if (!personalOnly.length) return;
+        try {
+          const client = ensureSupabaseClient();
+          const rows = personalOnly.map(cardToPersonalRow);
+          const chunkSize = 20;
+          for (let i = 0; i < rows.length; i += chunkSize) {
+            await client.from('mc_cards').upsert(rows.slice(i, i + chunkSize), { onConflict: 'id' });
+          }
+        } catch (e) {}
+      }
+
+      async function syncPersonalDelete(localCardIds) {
+        const pRoom = getPersonalRoomCode();
+        if (!pRoom || !sbConfig.url || !sbConfig.key || !localCardIds || !localCardIds.length) return;
+        try {
+          const client = ensureSupabaseClient();
+          const rowIds = localCardIds.map(personalRowId);
+          const chunkSize = 40;
+          for (let i = 0; i < rowIds.length; i += chunkSize) {
+            await client.from('mc_cards').delete().in('id', rowIds.slice(i, i + chunkSize)).eq('room_code', pRoom);
+          }
+        } catch (e) {}
+      }
+
+      async function syncAccountFromCloud() {
+        const pRoom = getPersonalRoomCode();
+        if (!pRoom || !sbConfig.url || !sbConfig.key) return;
+        try {
+          const client = ensureSupabaseClient();
+
+          // 1. Load personal cards & decks from cloud
+          const { data: pRows } = await client
+            .from('mc_cards')
+            .select('*')
+            .eq('room_code', pRoom)
+            .order('updated_at', { ascending: false });
+          if (Array.isArray(pRows)) {
+            const remoteIds = new Set();
+            pRows.forEach(r => {
+              const rawC = Array.isArray(r.comments) ? r.comments : [];
+              const meta = rawC.find(x => x && x.type === '__mc_meta') || {};
+              remoteIds.add(meta.localId || r.id.split('::').pop());
+              applyPersonalRowToLocal(r);
+            });
+            // If local account has cards not yet backed up to cloud, back them up cleanly
+            const unsyncedLocal = state.cards.filter(c => !c.studyOnly && !remoteIds.has(c.id));
+            if (unsyncedLocal.length) syncPersonalUpsert(unsyncedLocal);
+          }
+
+          // Subscribe to personal cloud realtime updates (Phone <-> iPad <-> PC)
+          if (sbPersonalChannel) {
+            try { await client.removeChannel(sbPersonalChannel); } catch (e) {}
+            sbPersonalChannel = null;
+          }
+          sbPersonalChannel = client
+            .channel('mc_personal_' + encodeURIComponent(pRoom))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'mc_cards', filter: `room_code=eq.${pRoom}` }, payload => {
+              if (payload.eventType === 'DELETE') {
+                const delRowId = payload.old?.id || '';
+                const localId = delRowId.split('::').pop();
+                if (localId) {
+                  state.cards = state.cards.filter(c => c.studyOnly || c.id !== localId);
+                  saveState();
+                  renderAll();
+                }
+              } else if (payload.new) {
+                applyPersonalRowToLocal(payload.new);
+                saveState();
+                renderAll();
+              }
+            })
+            .subscribe();
+
+          // 2. Load ALL real study groups this account belongs to from mc_groups
+          const { data: allGroups } = await client.from('mc_groups').select('*');
+          const mySid = sbConfig.studentId;
+          const joinedRows = (allGroups || []).filter(row => {
+            if (row.owner_student_id && row.owner_student_id === mySid && row.owner_name === CURRENT_USER) return true;
+            const mems = Array.isArray(row.members) ? row.members : [];
+            return mems.some(m => m.name === CURRENT_USER);
+          });
+          // Keep only real joined groups on this account
+          const validCodes = new Set(joinedRows.map(r => r.room_code));
+          state.groups = state.groups.filter(g => validCodes.has(g.inviteCode));
+          joinedRows.forEach(r => applyRemoteGroupRow(r));
+
+          // Fetch shared cards for all joined groups
+          for (const g of state.groups) {
+            const { data: gCards } = await client
+              .from('mc_cards')
+              .select('*')
+              .eq('room_code', g.inviteCode)
+              .order('updated_at', { ascending: false });
+            (gCards || []).forEach(r => applyRemoteRowToLocal(r, false));
+          }
+
+          if (state.groups.length) {
+            const activeG = state.groups.find(g => g.inviteCode === sbConfig.room) || state.groups[0];
+            ui.activeGroupId = activeG.id;
+            sbConfig.room = activeG.inviteCode;
+            await connectSupabase(true);
+          } else {
+            ui.activeGroupId = '';
+            sbConfig.room = '';
+            updateSyncIndicator(true, '계정 동기화 중');
+          }
+          saveSyncConfig();
+          saveState();
+          renderAll();
+        } catch (e) {
+          console.error('Account cloud sync error:', e);
         }
       }
 
@@ -4070,15 +4280,18 @@
         CURRENT_USER = sbConfig.nickname;
         saveSyncConfig();
 
-        // Update member display name in default group
-        state.groups.forEach(g => {
-          if (g.members && g.members.length && g.members[0].role === '방장') {
-            g.members[0].name = CURRENT_USER;
-          }
-        });
-        saveState();
+        // Switch local workspace strictly to THIS account's isolated storage
+        state = loadState();
+        ui.filterSubject = 'all';
+        ui.filterProf = 'all';
+        ui.filterChapter = 'all';
+        ui.quickFilter = 'all';
+        ui.openSharedBundleKey = null;
+        ui.activeGroupId = state.groups[0]?.id || '';
+        sbConfig.room = state.groups[0]?.inviteCode || '';
+        saveSyncConfig();
 
-        // Register member & check block status on Supabase
+        // Register member & check block status on Supabase, then sync THIS account from cloud
         if (sbConfig.url && sbConfig.key) {
           const chk = await registerAndWatchMember(name, studentId);
           if (chk.blocked) {
@@ -4087,23 +4300,43 @@
             setGateFeedback('접속이 제한된 계정입니다. 관리자에게 문의해 주세요.', true);
             return;
           }
-          try { await connectSupabase(true); } catch (e) {}
+          unlockAppWorkspace();
+          await syncAccountFromCloud();
+        } else {
+          unlockAppWorkspace();
         }
-
-        unlockAppWorkspace();
-        showToast(`${name} (${studentId})님, 환영합니다! 다음부터 자동 로그인됩니다.`, 'success');
+        showToast(`${name} (${studentId})님 계정으로 로그인되었습니다!`, 'success');
       }
 
       async function handleAuthLogout() {
-        if (sbChannel && sbClient) {
-          try { await sbClient.removeChannel(sbChannel); } catch (e) {}
-          sbChannel = null;
-        }
         if (sbClient) {
+          for (const ch of [sbChannel, sbGroupChannel, sbPersonalChannel, sbMemberChannel]) {
+            if (ch) { try { await sbClient.removeChannel(ch); } catch (e) {} }
+          }
           try { await sbClient.auth.signOut(); } catch (e) {}
         }
+        sbChannel = null;
+        sbGroupChannel = null;
+        sbPersonalChannel = null;
+        sbMemberChannel = null;
         sbUser = null;
+
+        // Completely clear in-memory state so next account never sees previous user's data
+        state = getDefaultState();
+        ui.activeGroupId = '';
+        ui.openSharedBundleKey = null;
+        ui.filterSubject = 'all';
+        ui.filterProf = 'all';
+        ui.filterChapter = 'all';
+        ui.quickFilter = 'all';
+        ui.selectedCardIds.clear();
+
         sbConfig.loggedIn = false;
+        sbConfig.name = '';
+        sbConfig.studentId = '';
+        sbConfig.nickname = '';
+        sbConfig.room = '';
+        CURRENT_USER = '나 (본인)';
         saveSyncConfig();
         updateSyncIndicator(false);
         const modal = document.getElementById('modal-sync');
@@ -4196,9 +4429,10 @@
       }
 
       async function connectSupabase(isAuto) {
-        const room = sbConfig.room.trim();
+        const room = (sbConfig.room || '').trim();
         if (!room) {
-          if (!isAuto) setSyncFeedback('스터디 방 코드를 입력해 주세요.', true);
+          updateSyncIndicator(true, '계정 동기화 중');
+          if (!isAuto) setSyncFeedback('계정 클라우드 동기화가 연결되어 있습니다. 스터디 공유 탭에서 스터디를 만들거나 참가해 보세요.', false);
           return;
         }
         try {
@@ -4300,7 +4534,7 @@
 
       function openSyncModal() {
         const roomBadge = document.getElementById('sync-room-badge');
-        if (roomBadge) roomBadge.textContent = sbConfig.room || 'MC-STUDY-2026';
+        if (roomBadge) roomBadge.textContent = sbConfig.room || '참여 중인 스터디 없음';
         updateSyncIndicator(sbConnected);
         const modal = document.getElementById('modal-sync');
         modal.classList.remove('hidden');
@@ -5135,7 +5369,7 @@
           state.cards = state.cards.filter(c => !ui.selectedCardIds.has(c.id));
           ui.selectedCardIds.clear();
           saveState();
-          syncDeleteCards(delIds);
+          syncPersonalDelete(delIds); syncDeleteCards(delIds);
           renderAll();
           showToast(`${delIds.length}개의 카드를 삭제했습니다.`);
         });
@@ -5432,6 +5666,8 @@
         });
         document.getElementById('btn-join-group').addEventListener('click', () => {
           document.getElementById('jg-code').value = '';
+          const errEl = document.getElementById('jg-error');
+          if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
           const m = document.getElementById('modal-join-group');
           m.classList.remove('hidden'); m.classList.add('flex');
           setTimeout(() => document.getElementById('jg-code').focus(), 40);
@@ -5471,9 +5707,23 @@
           if (delCards) {
             const delIds = state.cards.filter(c => c.sharedGroupId === g.id).map(c => c.id);
             state.cards = state.cards.filter(c => c.sharedGroupId !== g.id);
-            if (delIds.length) await syncDeleteCards(delIds);
+            if (delIds.length) await syncPersonalDelete(delIds); syncDeleteCards(delIds);
           } else {
             state.cards.forEach(c => { if (c.sharedGroupId === g.id) c.sharedGroupId = ''; });
+          }
+          if (sbConfig.url && sbConfig.key) {
+            try {
+              const client = ensureSupabaseClient();
+              if (owner) {
+                await client.from('mc_groups').delete().eq('room_code', g.inviteCode);
+              } else {
+                const { data: curRow } = await client.from('mc_groups').select('members').eq('room_code', g.inviteCode).maybeSingle();
+                if (curRow && Array.isArray(curRow.members)) {
+                  const nextMems = curRow.members.filter(m => m.name !== CURRENT_USER);
+                  await client.from('mc_groups').update({ members: nextMems, updated_at: new Date().toISOString() }).eq('room_code', g.inviteCode);
+                }
+              }
+            } catch (e) {}
           }
           state.groups = state.groups.filter(x => x.id !== g.id);
           ui.activeGroupId = state.groups[0]?.id || '';
@@ -5490,20 +5740,50 @@
           showToast(`"${g.name}" 스터디를 제거했습니다.`);
         });
         document.getElementById('btn-jg-join').addEventListener('click', async () => {
-          const code = document.getElementById('jg-code').value.trim().toUpperCase();
-          if (!code) { showToast('초대 코드를 입력해 주세요.', 'error'); return; }
-          const grp = ensureGroupForRoomCode(code, `스터디 (${code})`);
-          ui.activeGroupId = grp.id;
-          sbConfig.room = grp.inviteCode;
-          saveSyncConfig();
-          saveState();
-          const m = document.getElementById('modal-join-group');
-          m.classList.add('hidden'); m.classList.remove('flex');
-          if (sbConfig.url && sbConfig.key) {
-            await connectSupabase(true);
+          const codeInput = document.getElementById('jg-code').value.trim().toUpperCase();
+          const errEl = document.getElementById('jg-error');
+          const setJgErr = msg => {
+            if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+            showToast(msg, 'error');
+          };
+          if (!codeInput) { setJgErr('초대 코드를 입력해 주세요.'); return; }
+          if (!sbConfig.url || !sbConfig.key) {
+            setJgErr('서버에 연결되어 있지 않아 스터디를 확인할 수 없습니다.');
+            return;
           }
-          renderAll();
-          showToast(`"${grp.name}" 스터디에 참여했습니다!`, 'success');
+          const btn = document.getElementById('btn-jg-join');
+          btn.disabled = true;
+          btn.textContent = '스터디 확인 중...';
+          try {
+            const client = ensureSupabaseClient();
+            const { data: existing, error } = await client
+              .from('mc_groups')
+              .select('*')
+              .eq('room_code', codeInput)
+              .maybeSingle();
+            if (error || !existing) {
+              setJgErr('해당 스터디는 존재하지 않습니다. 초대 코드를 다시 입력해 주세요.');
+              return;
+            }
+            // Real group found! Join it and sync
+            const syncedGrp = await syncGroupMetadataAndJoin(codeInput, null);
+            const grp = syncedGrp || applyRemoteGroupRow(existing);
+            ui.activeGroupId = grp.id;
+            ui.openSharedBundleKey = null;
+            sbConfig.room = grp.inviteCode;
+            saveSyncConfig();
+            saveState();
+            const m = document.getElementById('modal-join-group');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            await connectSupabase(true);
+            renderAll();
+            showToast(`"${grp.name}" 스터디에 참가했습니다!`, 'success');
+          } catch (e) {
+            setJgErr('스터디 확인 중 오류가 발생했습니다. 네트워크를 확인해 주세요.');
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '참여하고 동기화';
+          }
         });
         document.getElementById('btn-create-group').addEventListener('click', () => {
           const m = document.getElementById('modal-new-group');
@@ -5614,6 +5894,7 @@
               });
             });
             saveState();
+            syncPersonalUpsert(state.cards.slice(0, toImport.length));
             renderAll();
             showToast(`${toImport.length}장의 카드를 내 개인 덱으로 가져왔습니다!`, 'success');
             return;
@@ -5676,6 +5957,7 @@
                 comments: []
               });
               saveState();
+              syncPersonalUpsert([state.cards[0]]);
               renderAll();
               showToast('내 개인 덱으로 복사되었습니다! 이제 자유롭게 수정·복습할 수 있어요.', 'success');
             }
@@ -6098,9 +6380,11 @@
             }
           }
           CURRENT_USER = `${sbConfig.name} (${sbConfig.studentId})`;
+          state = loadState();
+          ui.activeGroupId = state.groups[0]?.id || '';
           unlockAppWorkspace();
           if (sbConfig.url && sbConfig.key) {
-            try { await connectSupabase(true); } catch (e) {}
+            try { await syncAccountFromCloud(); } catch (e) {}
           }
           return;
         }
