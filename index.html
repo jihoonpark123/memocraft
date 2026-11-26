@@ -1482,12 +1482,25 @@
         return getDefaultState();
       }
 
+      let _lastSyncedTaxSig = '';
+      let _taxSyncTimer = null;
+      let _applyingRemoteTax = false;
+
       function saveState() {
         const key = getAccountStorageKey();
         if (!key) return;
         try {
           localStorage.setItem(key, JSON.stringify(state));
         } catch (e) {}
+        if (!_applyingRemoteTax && typeof syncTaxonomyToCloud === 'function') {
+          const sig = JSON.stringify(state.taxonomy || []);
+          if (sig !== _lastSyncedTaxSig) {
+            state.taxonomyUpdatedAt = Date.now();
+            _lastSyncedTaxSig = sig;
+            clearTimeout(_taxSyncTimer);
+            _taxSyncTimer = setTimeout(() => { syncTaxonomyToCloud(); }, 350);
+          }
+        }
       }
 
       function uid(prefix) {
@@ -4105,8 +4118,71 @@
         };
       }
 
+      function taxonomyRowId() {
+        const ak = getAccountKey();
+        return ak ? `tax::${ak}` : '';
+      }
+
+      async function syncTaxonomyToCloud() {
+        const pRoom = getPersonalRoomCode();
+        const rId = taxonomyRowId();
+        if (!pRoom || !rId || !sbConfig.url || !sbConfig.key) return;
+        try {
+          const client = ensureSupabaseClient();
+          const payload = {
+            updatedAt: state.taxonomyUpdatedAt || Date.now(),
+            taxonomy: state.taxonomy || []
+          };
+          await client.from('mc_cards').upsert([{
+            id: rId,
+            room_code: pRoom,
+            subject_name: '__TAXONOMY__',
+            prof_name: '__TAXONOMY__',
+            chapter_name: '__TAXONOMY__',
+            front: JSON.stringify(payload),
+            back: '',
+            tags: [],
+            starred: false,
+            author: CURRENT_USER,
+            updated_by: CURRENT_USER,
+            comments: [],
+            updated_at: new Date().toISOString()
+          }], { onConflict: 'id' });
+        } catch (e) {}
+      }
+
+      function applyRemoteTaxonomyRow(row) {
+        if (!row || row.subject_name !== '__TAXONOMY__' || !row.front) return false;
+        try {
+          const parsed = JSON.parse(row.front);
+          if (!parsed || !Array.isArray(parsed.taxonomy)) return false;
+          const remoteTs = Number(parsed.updatedAt || 0);
+          const localTs = Number(state.taxonomyUpdatedAt || 0);
+          if (localTs && remoteTs && localTs > remoteTs + 1500 && (state.taxonomy || []).length > 0) {
+            // Local folder tree is strictly newer — push local up!
+            syncTaxonomyToCloud();
+            return true;
+          }
+          _applyingRemoteTax = true;
+          state.taxonomy = parsed.taxonomy;
+          state.taxonomyUpdatedAt = remoteTs || Date.now();
+          _lastSyncedTaxSig = JSON.stringify(state.taxonomy);
+          // Expand synced subjects cleanly
+          state.taxonomy.forEach(s => ui.expandedSubjects.add(s.id));
+          _applyingRemoteTax = false;
+          return true;
+        } catch (e) {
+          _applyingRemoteTax = false;
+          return false;
+        }
+      }
+
       function applyPersonalRowToLocal(row) {
         if (!row || !row.id) return;
+        if (row.subject_name === '__TAXONOMY__' || String(row.id).startsWith('tax::')) {
+          applyRemoteTaxonomyRow(row);
+          return;
+        }
         const rawComments = Array.isArray(row.comments) ? row.comments : [];
         const meta = rawComments.find(x => x && x.type === '__mc_meta') || {};
         const visibleComments = rawComments.filter(x => x && x.type !== '__mc_meta');
@@ -4199,8 +4275,15 @@
             .eq('room_code', pRoom)
             .order('updated_at', { ascending: false });
           if (Array.isArray(pRows)) {
+            const taxRow = pRows.find(r => r.subject_name === '__TAXONOMY__' || String(r.id).startsWith('tax::'));
+            const cardRows = pRows.filter(r => r.subject_name !== '__TAXONOMY__' && !String(r.id).startsWith('tax::'));
+            if (taxRow) {
+              applyRemoteTaxonomyRow(taxRow);
+            } else if ((state.taxonomy || []).length > 0) {
+              syncTaxonomyToCloud();
+            }
             const remoteIds = new Set();
-            pRows.forEach(r => {
+            cardRows.forEach(r => {
               const rawC = Array.isArray(r.comments) ? r.comments : [];
               const meta = rawC.find(x => x && x.type === '__mc_meta') || {};
               remoteIds.add(meta.localId || r.id.split('::').pop());
