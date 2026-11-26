@@ -432,7 +432,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <span class="text-xs font-bold text-slate-500 dark:text-slate-400">학습 범위:</span>
               <select id="study-scope-select" class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-100">
-                <option value="due">오늘 복습 필요 카드 전체</option>
+                <option value="due">현재 필터 중 미학습 · 남은 카드 (이어하기)</option>
                 <option value="filtered">현재 필터링된 카드 전체</option>
                 <option value="starred">시험 출제 예상(⭐) 집중 복습</option>
                 <option value="all">전체 카드 연습 모드</option>
@@ -2057,16 +2057,25 @@
       }
 
       // ================= STUDY MODE (SM-2) =================
+      function shuffleArray(arr) {
+        const out = [...arr];
+        for (let i = out.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [out[i], out[j]] = [out[j], out[i]];
+        }
+        return out;
+      }
+
       function buildStudyQueue(scope) {
         ui.studyScope = scope || ui.studyScope;
         let pool = [];
         const personalPool = state.cards.filter(c => !c.studyOnly);
-        if (ui.studyScope === 'due') pool = personalPool.filter(isDue);
+        if (ui.studyScope === 'due') pool = getFilteredCards().filter(isDue);
         else if (ui.studyScope === 'filtered') pool = getFilteredCards();
         else if (ui.studyScope === 'starred') pool = personalPool.filter(c => c.starred);
         else pool = [...personalPool];
 
-        ui.studyQueue = pool.map(c => c.id);
+        ui.studyQueue = shuffleArray(pool.map(c => c.id));
         ui.studyIndex = 0;
         ui.studyFlipped = false;
         ui.sessionWaitingMap = new Map();
@@ -6261,7 +6270,7 @@
             const bCards = getBundleCardsByKey(studyB.dataset.studyBundle);
             if (!bCards.length) return;
             ui.studyScope = 'filtered';
-            ui.studyQueue = bCards.map(c => c.id);
+            ui.studyQueue = shuffleArray(bCards.map(c => c.id));
             ui.studyIndex = 0;
             ui.studyFlipped = false;
             ui.sessionWaitingMap = new Map();
@@ -6443,7 +6452,7 @@
           const gCards = state.cards.filter(c => c.sharedGroupId === ui.activeGroupId);
           if (!gCards.length) { showToast('이 스터디에 공유된 카드가 아직 없습니다.', 'error'); return; }
           ui.studyScope = 'filtered';
-          ui.studyQueue = gCards.map(c => c.id);
+          ui.studyQueue = shuffleArray(gCards.map(c => c.id));
           ui.studyIndex = 0;
           ui.studyFlipped = false;
           ui.sessionWaitingMap = new Map();
