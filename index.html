@@ -2,14 +2,15 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>MemoCraft</title>
   <meta name="application-name" content="MemoCraft" />
   <meta name="apple-mobile-web-app-title" content="MemoCraft" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="180x180" href="apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
@@ -17,6 +18,7 @@
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
   <script>
@@ -196,7 +198,7 @@
 
   <div id="app" class="hidden flex-col min-h-screen">
     <!-- Top Header -->
-    <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <header class="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800" style="padding-top: env(safe-area-inset-top);">
       <div class="max-w-[1600px] mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-2">
         <div class="flex items-center gap-2.5 min-w-0">
           <button id="btn-mobile-sidebar" type="button" class="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="분류 메뉴 열기">
@@ -2920,7 +2922,7 @@
           apkgShareSel.innerHTML = `<option value="">스터디에 추가 안 함</option>` +
             state.groups.map(g => `<option value="${g.id}">스터디에 추가: ${escapeHtml(g.name)} (${g.inviteCode})</option>`).join('');
         }
-        document.getElementById('apkg-status-text').textContent = '빈칸(Cloze), 태그, 이미지 포함 덱 지원 (.anki2 / .anki21)';
+        document.getElementById('apkg-status-text').textContent = '빈칸(Cloze), 태그, 이미지 및 최신 Anki(.anki21b) 포함 모든 .apkg 지원';
         document.getElementById('export-code-box').value = '';
         document.getElementById('import-code-box').value = '';
         const modal = document.getElementById('modal-share-io');
@@ -3106,37 +3108,124 @@
           const buf = await file.arrayBuffer();
           const zip = await window.JSZip.loadAsync(buf);
 
-          const dbEntry = zip.file('collection.anki21') || zip.file('collection.anki2');
-          if (!dbEntry) {
-            if (zip.file('collection.anki21b')) {
-              statusEl.textContent = 'zstd 압축(.anki21b) 형식 감지 — Anki에서 구버전 호환 내보내기가 필요합니다.';
-              showToast('Anki 내보내기 시 "구버전 Anki 지원(Legacy)"을 체크해 다시 내보내 주세요.', 'error');
-              return;
+          const isZstd = u8 => u8 && u8.length >= 4 && u8[0] === 0x28 && u8[1] === 0xB5 && u8[2] === 0x2F && u8[3] === 0xFD;
+          const maybeDecompressZstd = u8 => {
+            if (!isZstd(u8)) return u8;
+            if (!window.fzstd) throw new Error('Zstandard 해제 라이브러리(fzstd)를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+            return window.fzstd.decompress(u8);
+          };
+          const u8ToBase64 = u8 => {
+            let bin = '';
+            const step = 0x8000;
+            for (let i = 0; i < u8.length; i += step) {
+              bin += String.fromCharCode.apply(null, u8.subarray(i, i + step));
             }
-            throw new Error('유효한 Anki 데이터베이스(collection.anki2 / anki21)가 없습니다.');
+            return btoa(bin);
+          };
+          const parseAnkiMediaProtobuf = u8 => {
+            const map = {};
+            let pos = 0, idx = 0;
+            const dec = new TextDecoder('utf-8');
+            const readVarint = (buf, p) => {
+              let val = 0, shift = 0;
+              while (p < buf.length) {
+                const b = buf[p++];
+                val += (b & 0x7F) * Math.pow(2, shift);
+                if ((b & 0x80) === 0) break;
+                shift += 7;
+              }
+              return [val, p];
+            };
+            while (pos < u8.length) {
+              let tag; [tag, pos] = readVarint(u8, pos);
+              const wire = tag & 7, fieldNum = tag >> 3;
+              if (wire === 2) {
+                let len; [len, pos] = readVarint(u8, pos);
+                const end = pos + len;
+                if (fieldNum === 1) {
+                  let mp = pos, fname = '';
+                  while (mp < end) {
+                    let mtag; [mtag, mp] = readVarint(u8, mp);
+                    const mwire = mtag & 7, mfield = mtag >> 3;
+                    if (mwire === 2) {
+                      let mlen; [mlen, mp] = readVarint(u8, mp);
+                      if (mfield === 1) fname = dec.decode(u8.subarray(mp, mp + mlen));
+                      mp += mlen;
+                    } else if (mwire === 0) { [, mp] = readVarint(u8, mp); }
+                    else if (mwire === 1) { mp += 8; }
+                    else if (mwire === 5) { mp += 4; }
+                    else break;
+                  }
+                  if (fname) map[String(idx)] = fname;
+                  idx++;
+                }
+                pos = end;
+              } else if (wire === 0) { [, pos] = readVarint(u8, pos); }
+              else if (wire === 1) { pos += 8; }
+              else if (wire === 5) { pos += 4; }
+              else break;
+            }
+            return map;
+          };
+
+          const zstdEntry = zip.file('collection.anki21b');
+          const dbEntry = (zstdEntry && window.fzstd) ? zstdEntry : (zip.file('collection.anki21') || zip.file('collection.anki2') || zstdEntry);
+          if (!dbEntry) {
+            throw new Error('유효한 Anki 데이터베이스(collection.anki2 / anki21 / anki21b)가 없습니다.');
           }
 
           const SQL = await getSqlEngine();
-          const dbBytes = await dbEntry.async('uint8array');
+          const rawDbBytes = await dbEntry.async('uint8array');
+          const dbBytes = maybeDecompressZstd(rawDbBytes);
           const db = new SQL.Database(dbBytes);
 
-          // Read deck names and models (field names!) from col
+          // Read deck names and models (supports BOTH Anki 23.10+ .anki21b tables AND legacy col JSON!)
           const deckMap = {};
           const modelMap = {};
           try {
-            const colRes = db.exec('SELECT decks, models FROM col LIMIT 1');
-            if (colRes.length && colRes[0].values.length) {
-              const decksObj = JSON.parse(colRes[0].values[0][0] || '{}');
-              Object.values(decksObj).forEach(d => { deckMap[String(d.id)] = d.name || 'Anki 덱'; });
-              const modelsObj = JSON.parse(colRes[0].values[0][1] || '{}');
-              Object.values(modelsObj).forEach(m => {
-                modelMap[String(m.id)] = {
-                  name: m.name || '기본 노트',
-                  flds: (m.flds || []).map(f => f.name || '필드')
-                };
+            const dRes = db.exec('SELECT id, name FROM decks');
+            if (dRes.length) {
+              dRes[0].values.forEach(([id, name]) => {
+                deckMap[String(id)] = String(name || 'Anki 덱').replace(/\x1f/g, '::');
               });
             }
-          } catch (e) { /* ignore */ }
+          } catch (e) { /* legacy schema */ }
+          try {
+            const ntRes = db.exec('SELECT id, name FROM notetypes');
+            if (ntRes.length) {
+              ntRes[0].values.forEach(([id, name]) => {
+                modelMap[String(id)] = { name: String(name || '기본 노트'), flds: [] };
+              });
+              const fRes = db.exec('SELECT ntid, ord, name FROM fields ORDER BY ntid, ord');
+              if (fRes.length) {
+                fRes[0].values.forEach(([ntid, ord, fname]) => {
+                  const key = String(ntid);
+                  if (!modelMap[key]) modelMap[key] = { name: '기본 노트', flds: [] };
+                  modelMap[key].flds[Number(ord)] = String(fname || '필드');
+                });
+              }
+            }
+          } catch (e) { /* legacy schema */ }
+          if (!Object.keys(deckMap).length || !Object.keys(modelMap).length) {
+            try {
+              const colRes = db.exec('SELECT decks, models FROM col LIMIT 1');
+              if (colRes.length && colRes[0].values.length) {
+                if (!Object.keys(deckMap).length) {
+                  const decksObj = JSON.parse(colRes[0].values[0][0] || '{}');
+                  Object.values(decksObj).forEach(d => { deckMap[String(d.id)] = d.name || 'Anki 덱'; });
+                }
+                if (!Object.keys(modelMap).length) {
+                  const modelsObj = JSON.parse(colRes[0].values[0][1] || '{}');
+                  Object.values(modelsObj).forEach(m => {
+                    modelMap[String(m.id)] = {
+                      name: m.name || '기본 노트',
+                      flds: (m.flds || []).map(f => f.name || '필드')
+                    };
+                  });
+                }
+              }
+            } catch (e) { /* ignore */ }
+          }
 
           const noteToDeck = {};
           try {
@@ -3217,14 +3306,23 @@
           const mediaFile = zip.file('media');
           if (mediaFile && neededMedia.size > 0) {
             try {
-              const mediaJson = JSON.parse(await mediaFile.async('string'));
+              const rawMediaBytes = await mediaFile.async('uint8array');
+              const mediaBytes = maybeDecompressZstd(rawMediaBytes);
+              let mediaJson = {};
+              try {
+                mediaJson = JSON.parse(new TextDecoder('utf-8').decode(mediaBytes));
+              } catch (e) {
+                mediaJson = parseAnkiMediaProtobuf(mediaBytes);
+              }
               for (const [numKey, origName] of Object.entries(mediaJson)) {
                 if (!neededMedia.has(origName)) continue;
                 const ext = (origName.split('.').pop() || '').toLowerCase();
                 if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) continue;
                 const binEntry = zip.file(numKey);
                 if (!binEntry) continue;
-                const b64 = await binEntry.async('base64');
+                const rawImgBytes = await binEntry.async('uint8array');
+                const imgBytes = maybeDecompressZstd(rawImgBytes);
+                const b64 = u8ToBase64(imgBytes);
                 const mime = ext === 'jpg' ? 'image/jpeg' : ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
                 const rawUri = `data:${mime};base64,${b64}`;
                 const rawSize = Math.round(b64.length * 0.75);
@@ -3511,6 +3609,27 @@
               showToast(`"${chapObj.name}" 및 소속 카드를 "${toProf.name}"(으)로 이동했습니다.`, 'success');
             }
           }
+        }
+
+        // Collect all cards affected by rename / move and immediately sync to cloud!
+        let affectedCards = [];
+        if (cfg.mode === 'rename') {
+          if (cfg.target === 'sub') affectedCards = state.cards.filter(c => c.subjectId === cfg.subId);
+          else if (cfg.target === 'prof') affectedCards = state.cards.filter(c => c.subjectId === cfg.subId && c.profId === cfg.profId);
+          else if (cfg.target === 'chap') affectedCards = state.cards.filter(c => c.chapterId === cfg.chapId);
+        } else if (cfg.mode === 'move-prof') {
+          const targetSubId = document.getElementById('tax-move-subject').value;
+          affectedCards = state.cards.filter(c => c.subjectId === targetSubId && c.profId === cfg.profId);
+        } else if (cfg.mode === 'move-chap') {
+          affectedCards = state.cards.filter(c => c.chapterId === cfg.chapId);
+        }
+        if (affectedCards.length) {
+          const nowIso = new Date().toISOString();
+          affectedCards.forEach(c => { c.updatedAt = nowIso; });
+          const personalAff = affectedCards.filter(c => !c.studyOnly);
+          const sharedAff = affectedCards.filter(c => !!c.sharedGroupId);
+          if (personalAff.length) syncPersonalUpsert(personalAff);
+          if (sharedAff.length) syncUpsertCards(sharedAff);
         }
 
         saveState();
@@ -3998,6 +4117,13 @@
 
         const existing = state.cards.find(c => !c.studyOnly && c.id === localId);
         if (existing) {
+          const localMs = existing.updatedAt ? Date.parse(existing.updatedAt) : 0;
+          const remoteMs = row.updated_at ? Date.parse(row.updated_at) : 0;
+          if (localMs && remoteMs && localMs > remoteMs + 1000) {
+            // Local folder/card edit is strictly newer than server row — push local up instead of reverting!
+            syncPersonalUpsert([existing]);
+            return;
+          }
           existing.subjectId = tax.subjectId;
           existing.profId = tax.profId;
           existing.chapterId = tax.chapterId;
@@ -5570,17 +5696,27 @@
           const sId = document.getElementById('bm-subject').value;
           const pId = document.getElementById('bm-prof').value;
           const cId = document.getElementById('bm-chapter').value;
+          const movedCards = [];
+          const nowIso = new Date().toISOString();
           state.cards.forEach(c => {
             if (ui.selectedCardIds.has(c.id)) {
               c.subjectId = sId; c.profId = pId; c.chapterId = cId;
+              c.updatedAt = nowIso;
+              movedCards.push(c);
             }
           });
           ui.selectedCardIds.clear();
           saveState();
+          if (movedCards.length) {
+            const personalMoved = movedCards.filter(c => !c.studyOnly);
+            const sharedMoved = movedCards.filter(c => !!c.sharedGroupId);
+            if (personalMoved.length) syncPersonalUpsert(personalMoved);
+            if (sharedMoved.length) syncUpsertCards(sharedMoved);
+          }
           const m = document.getElementById('modal-bulk-move');
           m.classList.add('hidden'); m.classList.remove('flex');
           renderAll();
-          showToast('선택한 카드를 일괄 이동했습니다.', 'success');
+          showToast('선택한 카드를 일괄 이동하고 클라우드에 저장했습니다.', 'success');
         });
 
         // Cards Container Delegation
